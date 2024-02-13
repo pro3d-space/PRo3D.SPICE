@@ -127,7 +127,7 @@ let main argv =
     let time = cval (DateTime.Parse("2025-03-10 19:08:12.60"))
     //let time = cval (DateTime.Parse("2024-12-01 19:08:12.60"))
 
-    let observer = "HERA_SA+Y" // "SUN"
+    let observer = "MARS" //"HERA_SA+Y" // "SUN"
     let referenceFrame = "ECLIPJ2000"
 
     let targetState = 
