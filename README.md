@@ -2,7 +2,7 @@
 
 This repository provides a library to work with [SPICE](https://naif.jpl.nasa.gov/naif/toolkit.html) platform-indepentently in dotnet by wrapping the native [PRo3D-Extensions](https://github.com/DaKup/PRo3D-Extensions) library and providing easy-to-work-with tools.
 
-![](docs\mars.png)
+![fd](docs/mars.png)
 
 While [PRo3D](https://pro3d.space/) uses this library in a more sophisticated way for space-missions, this repository also shows how to render our solarsystem using the [aardvark-platform](https://github.com/aardvark-platform) as rendering-engine.
 
