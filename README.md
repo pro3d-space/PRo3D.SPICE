@@ -32,11 +32,11 @@ dotnet run --project src/PRo3D.SPICE.Tests/PRo3D.SPICE.Tests.fsproj
 dotnet run --project src/PRo3D.SPICE.RenderingDemo/PRo3D.SPICE.RenderingDemo.fsproj
 ```
 
-![](docs\mars.png)
+By setting observer to `mars` we can observe mars and its moons:
+![](docs/mars.png)
 
-The code can be modified to also simulate e.g. the planned hera flyby.
+By setting observer to `HERA` one can investigate the fly-by and animate the camera:
 ![Alt text](./docs/hera_observer.gif)
-
 
 # Running the interactive simluation animation tool
 
