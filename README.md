@@ -15,4 +15,7 @@ dotnet tool restore
 dotnet paket restore
 dotnet run --project src/PRo3D.SPICE.Tests/PRo3D.SPICE.Tests.fsproj
 ```
+```
+[17:16:20 INF] EXPECTO! 6 tests run in 00:00:00.2391825 for init - 6 passed, 0 ignored, 0 failed, 0 errored. Success! <Expecto>
+```
 
