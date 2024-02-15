@@ -1,9 +1,12 @@
 # SPICE for PRo3D and dotnet
 
-This repository provides a library to work with [SPICE](https://naif.jpl.nasa.gov/naif/toolkit.html) platform-indepentently in dotnet by wrapping the native [PRo3D-Extensions](https://github.com/DaKup/PRo3D-Extensions) library and providing easy-to-work-with tools.
+This repository provides a library to work with [SPICE](https://naif.jpl.nasa.gov/naif/toolkit.html) platform-indepentently in dotnet by wrapping the native [PRo3D-Extensions](https://github.com/DaKup/PRo3D-Extensions). The repository contains:
+ * the library accessible as a nuget package
+ * as well as a sample applications which allows to experiment with SPICE and interactive visualizations.
 
 ![](./docs/mars-flyby.gif)
-While [PRo3D](https://pro3d.space/) uses this library in a more sophisticated way for space-missions, this repository also shows how to render our solarsystem using the [aardvark-platform](https://github.com/aardvark-platform) as rendering-engine.
+[PRo3D](https://pro3d.space/) uses the library in a more sophisticated way for space-missions. Just like PRo3D, the visualization component is also written using [the aardvark-platform](https://github.com/aardvark-platform) and shows how to deal with large coordinates and different coordinate frames in graphics applications.
+
 
 # Getting spice kernels for testing
 
