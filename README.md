@@ -5,7 +5,8 @@ This repository provides a library to work with [SPICE](https://naif.jpl.nasa.go
  * as well as a sample applications which allows to experiment with SPICE and interactive visualizations.
 
 ![](./docs/mars-flyby.gif)
-[PRo3D](https://pro3d.space/) uses the library in a more sophisticated way for space-missions. Just like PRo3D, the visualization component is also written using [the aardvark-platform](https://github.com/aardvark-platform) and shows how to deal with large coordinates and different coordinate frames in graphics applications.
+
+[PRo3D](https://pro3d.space/) uses the library in a more sophisticated way for space-missions. However, just like PRo3D, the visualization component is also written using [the aardvark-platform](https://github.com/aardvark-platform) and shows how to deal with large coordinates and different coordinate frames in graphics applications.
 
 
 # Getting spice kernels for testing
