@@ -1,6 +1,6 @@
 # SPICE for PRo3D and dotnet
 
-This repository provides a library to work with [SPICE](https://naif.jpl.nasa.gov/naif/toolkit.html) platform-indepentently in dotnet by wrapping the native [PRo3D-Extensions](https://github.com/DaKup/PRo3D-Extensions). Moreover, this repository contains:
+This repository provides a library to work with [SPICE](https://naif.jpl.nasa.gov/naif/toolkit.html) platform-indepentently in dotnet by wrapping the native [PRo3D-Extensions](https://github.com/DaKup/PRo3D-Extensions) library written in C++. Moreover, this repository contains:
  * the library accessible as a nuget package,
  * as well as a sample applications which allows to experiment with SPICE and interactive visualizations.
 
