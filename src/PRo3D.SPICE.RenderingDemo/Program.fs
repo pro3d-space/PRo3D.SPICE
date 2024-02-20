@@ -15,11 +15,9 @@ open Aardvark.Application.Slim
 open FSharp.Data.Adaptive
 open Aardvark.Rendering.Text
 
+open PRo3D.SPICE
 open PRo3D.Extensions
 open PRo3D.Extensions.FSharp
-
-do Aardvark.Base.Aardvark.UnpackNativeDependencies(typeof<CooTransformation.RelState>.Assembly)
-
 
 module Shaders =
 
@@ -111,16 +109,16 @@ let main argv =
 
 
     let bodySources = 
-        [| "sun", C4f.White, 1392700.0
-           "mercury", C4f.Gray, 12742.0
-           "venus", C4f.AliceBlue, 12742.0
-           "earth", C4f.Blue, 12742.0
-           "moon", C4f.Beige, 34748.0
-           "mars", C4f.Red, 6779.0
-           "phobos", C4f.Red, 22.533
-           "deimos", C4f.Red, 12.4
-           "HERA", C4f.Magenta, 0.00001
-           "HERA_AFC-1", C4f.White, 0.00001
+        [| { name = "sun";        abstractColor = C4f.White;     diameter = 1392700.0<km>  }
+           { name = "mercury";    abstractColor = C4f.Gray;      diameter = 12742.0<km>    }
+           { name = "venus";      abstractColor = C4f.AliceBlue; diameter = 12742.0<km>    }
+           { name = "earth";      abstractColor = C4f.Blue;      diameter = 12742.0<km>    }
+           { name = "moon";       abstractColor = C4f.Beige;     diameter = 34748.0<km>    }
+           { name = "mars";       abstractColor = C4f.Red;       diameter = 6779.0<km>     }
+           { name = "phobos";     abstractColor = C4f.Red;       diameter = 22.533<km>     }
+           { name = "deimos";     abstractColor = C4f.Red;       diameter = 12.4<km>       }
+           { name = "HERA";       abstractColor = C4f.Magenta;   diameter = 0.00001<km>    }
+           { name = "HERA_AFC-1"; abstractColor = C4f.White;     diameter = 0.00001<km>    }
         |]
 
     let time = cval (DateTime.Parse("2025-03-10 19:08:12.60"))

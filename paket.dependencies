@@ -2,7 +2,7 @@ source https://api.nuget.org/v3/index.json
 framework: net6.0
 storage: none
 
-nuget FSharp.Core                           >= 5.0.1 lowest_matching: true
+nuget FSharp.Core                           >= 6.0.1 lowest_matching: true
 
 nuget Aardvark.Build                        ~> 1.0.11
 
@@ -22,3 +22,11 @@ nuget Aardvark.Application.Slim.Vulkan      ~> 5.2.17
 
 nuget Expecto                  ~> 9.0.4
 nuget Expecto.FsCheck          ~> 9.0.4
+
+nuget Adaptify.Core            ~> 1.1.13
+nuget Adaptify.MSBuild         ~> 1.1.13
+
+nuget Aardvark.Dom.Elm         ~> 1.0.0-prerelease0027
+nuget Aardvark.Dom.Giraffe     ~> 1.0.0-prerelease0027
+nuget Aardvark.Dom.Server      ~> 1.0.0-prerelease0027
+nuget Aardvark.Dom             ~> 1.0.0-prerelease0027

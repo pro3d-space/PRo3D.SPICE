@@ -13,7 +13,9 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "PRo3D.SPICE", "src\PRo3D.SP
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "PRo3D.SPICE.Tests", "src\PRo3D.SPICE.Tests\PRo3D.SPICE.Tests.fsproj", "{1C10AD61-C36D-444B-85D1-4A6B9CBC8E26}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PRo3D.SPICE.RenderingDemo", "src\PRo3D.SPICE.RenderingDemo\PRo3D.SPICE.RenderingDemo.fsproj", "{2CA8BE9C-504B-4FC1-B7BB-BA3F6A21EB34}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "PRo3D.SPICE.RenderingDemo", "src\PRo3D.SPICE.RenderingDemo\PRo3D.SPICE.RenderingDemo.fsproj", "{2CA8BE9C-504B-4FC1-B7BB-BA3F6A21EB34}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PRo3D.SPICE.App", "src\PRo3D.SPICE.App\PRo3D.SPICE.App.fsproj", "{F363B8D4-3411-4437-BDE3-716B74D5CF27}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{2CA8BE9C-504B-4FC1-B7BB-BA3F6A21EB34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CA8BE9C-504B-4FC1-B7BB-BA3F6A21EB34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2CA8BE9C-504B-4FC1-B7BB-BA3F6A21EB34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F363B8D4-3411-4437-BDE3-716B74D5CF27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F363B8D4-3411-4437-BDE3-716B74D5CF27}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F363B8D4-3411-4437-BDE3-716B74D5CF27}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F363B8D4-3411-4437-BDE3-716B74D5CF27}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
