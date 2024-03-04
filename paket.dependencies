@@ -22,3 +22,5 @@ nuget Aardvark.Application.Slim.Vulkan      ~> 5.2.17
 
 nuget Expecto                  ~> 9.0.4
 nuget Expecto.FsCheck          ~> 9.0.4
+
+nuget FSharp.CommandLine ~> 3.3

@@ -1,0 +1,3 @@
+[submodule "spice_kernels"]
+	path = spice_kernels
+	url = https://s2e2.cosmos.esa.int/bitbucket/scm/spice_kernels/hera.git

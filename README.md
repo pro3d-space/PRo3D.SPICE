@@ -12,11 +12,14 @@ This repository provides a library to work with [SPICE](https://naif.jpl.nasa.go
 # Getting spice kernels for testing
 
 Get spice kernels for example from here: [https://s2e2.cosmos.esa.int/bitbucket/scm/spice_kernels/hera.git](https://s2e2.cosmos.esa.int/bitbucket/scm/spice_kernels/hera.git).
-The tests per default try to load kernels from this local path `./hera/kernels/mk/hera_crema_2_0_LPO_ECP_PDP.tm`.
+The tests per default try to load kernels from this local path `./spice_kernels/hera/kernels/mk/hera_crema_2_0_LPO_ECP_PDP.tm`.
 
 ```
-git clone https://s2e2.cosmos.esa.int/bitbucket/scm/spice_kernels/hera.git
+mkdir spice_kernels
+git clone https://s2e2.cosmos.esa.int/bitbucket/scm/spice_kernels/hera.git spice_kernels
 ```
+
+or use pull the submodule.
 
 
 # Building & Running the tests
@@ -37,11 +40,19 @@ dotnet run --project src/PRo3D.SPICE.RenderingDemo/PRo3D.SPICE.RenderingDemo.fsp
 ```
 
 By setting observer to `mars` we can observe mars and its moons:
-![](docs/mars.png)
-
+![](docs/mars-flyby.gif)
 By setting observer to `HERA` one can investigate the fly-by and animate the camera:
 ![Alt text](./docs/hera_observer.gif)
 
+
 # Running the interactive simluation animation tool
 
-will be here shortly.
+will be here shortly. 
+
+# Integration in PRo3D
+
+By using PRo3D's rendering real surface data can be rendered together with the simple body representation used in the example:
+![](./docs/mars_observer_mola.gif)
+or impressive fly-by scenarios:
+![](./docs/flyby-opc.gif)
+
