@@ -52,7 +52,11 @@ will be here shortly.
 # Integration in PRo3D
 
 By using PRo3D's rendering real surface data can be rendered together with the simple body representation used in the example:
+
 ![](./docs/mars_observer_mola.gif)
+
 or impressive fly-by scenarios:
+
 ![](./docs/flyby-opc.gif)
+
 
