@@ -11,4 +11,4 @@ description
     SPICE tools for dotnet. This package is based in SPICE: The SPICE system software, the SPICE server and some SPICE-based tools are provided by NAIF. Other SPICE-based tools are provided by various groups/persons around the world.
 include-pdbs true
 files
-    ./docs/README.md ==> README.md
+    ../../docs/Readme.md ==> Readme.md
