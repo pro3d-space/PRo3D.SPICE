@@ -2,7 +2,7 @@ name: Publish
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - RELEASE_NOTES.md 
       - .github/workflows/publish.yml
@@ -33,11 +33,6 @@ jobs:
         with:
           name: packages
           path: bin\pack
-      - name: GitHub Packages
-        env:
-          NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
-        shell: cmd
-        run: dotnet nuget push "bin\pack\*.nupkg" -k %NUGET_KEY% -s "https://nuget.pkg.github.com/pro3d-space/index.json" --skip-duplicate
       - name: NuGet
         env:
           NUGET_KEY: ${{ secrets.NUGET_KEY }}
