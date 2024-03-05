@@ -6,7 +6,9 @@ projectUrl https://github.com/pro3d-space/PRo3D.SPICE
 licenseUrl https://github.com/pro3d-space/PRo3D.SPICE?tab=Apache-2.0-1-ov-file#readme
 repositoryType git
 repositoryUrl https://github.com/pro3d-space/PRo3D.SPICE
-copyright PRo3D.Space contributors, Credits to the SPICE toolkit
+readme Readme.md
 description
     SPICE tools for dotnet. This package is based in SPICE: The SPICE system software, the SPICE server and some SPICE-based tools are provided by NAIF. Other SPICE-based tools are provided by various groups/persons around the world.
 include-pdbs true
+files
+    ./docs/Readme.md ==> Readme.md
