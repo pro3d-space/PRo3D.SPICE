@@ -13,4 +13,4 @@ Aardvark.Application.Slim.Vulkan
 Aardvark.SceneGraph
 Aardvark.SceneGraph.IO
 
-FSharp.CommandLine
+CommandLineParser.FSharp

@@ -18,6 +18,9 @@ open Aardvark.Rendering.Text
 open PRo3D.Extensions
 open PRo3D.Extensions.FSharp
 
+open CommandLine
+open CommandLine.Text
+
 do Aardvark.Base.Aardvark.UnpackNativeDependencies(typeof<CooTransformation.RelState>.Assembly)
 
 
@@ -98,30 +101,41 @@ type BodyState =
 
 type Arguments = 
     {
-        startTime : DateTime
+        // start time given as UTC string (parsable by System.DateTime)
+        // e.g. "2025-03-10 19:08:12.60"
+        [<Option('t', "time", Required = true, HelpText = "Simulation start time.")>]
+        startTime : string
 
         // how much is 1 second screen time in the simulation?
         // e.g. 1 means, it takes you 1 day observing one earth rotation ;)
+        [<Option('f', "timefactor", Required = true, HelpText = "how much is 1 second screen time in the simulation?, e.g. 1 means, it takes you 1 day observing one earth rotation ;)")>]
         timeToSimluationTime : double
 
         // camera speed in m/s
+        [<Option('s', "speed", Required = true, HelpText = "Camera movement speed in m/s")>]
         cameraSpeed : double<m / s>
 
         // observer body (will be center of the world)
+        [<Option('o', "observer", Required = true, HelpText = "observer body (will be center of the world), e.g. earth, moon or mars.")>]
         observerBody : string 
 
         // SPICE name of reference frame to base the world on.
+        [<Option('r', "referenceframe", Required = true, HelpText = "SPICE reference frame, e.g. ECLIPJ2000")>]
         referenceFrame : string
+
+        [<Option('k', "spiceKernel", Required = false, Default = "", HelpText = "Path to SPICE metakernel")>]
+        spiceKernel : string
     }
 
 let scenarios = 
     [|
         { 
-            startTime = DateTime.Parse "2025-03-10 19:08:12.60"; 
-            timeToSimluationTime = (31.0 * 86400.0) / 220.0
+            startTime = "2025-03-10 19:08:12.60"; 
+            timeToSimluationTime = (31.0 * 86400.0) / 150.0
             cameraSpeed = 100000000.0<m/s>
             observerBody = "mars"; 
             referenceFrame = "ECLIPJ2000" 
+            spiceKernel = ""
         }
     |]
 
@@ -158,10 +172,21 @@ type CameraMode =
     | FreeFly
     | Orbit
 
+
 [<EntryPoint>]
 let main argv = 
     
-    let args = scenarios[0]
+    let args = 
+        if argv.Length = 0 then
+            scenarios[0]
+        else
+          let result = CommandLine.Parser.Default.ParseArguments<Arguments>(argv)
+          match result with
+          | :? Parsed<Arguments> as parsed -> parsed.Value
+          | :? NotParsed<Arguments> as notParsed -> failwithf "could not parse arguments: %A" notParsed.Errors
+          | _ -> failwithf "%A" result
+
+
     let observerBody = 
         match getBodySource args.observerBody with
         | Some s -> cval s
@@ -178,15 +203,25 @@ let main argv =
         if r <> 0 then failwith "could not initialize CooTransformation lib."
         { new IDisposable with member x.Dispose() = CooTransformation.DeInit() }
 
+    
+    let spiceFileName = 
+        if args.spiceKernel.IsNullOrEmpty() then
+            let spiceRoot = Path.Combine(__SOURCE_DIRECTORY__, "..", "..", "spice_kernels")
+            Path.Combine(spiceRoot, @"kernels/mk/hera_crema_2_0_LPO_ECP_PDP.tm")
+        else
+            args.spiceKernel
 
-    let spiceRoot = Path.Combine(__SOURCE_DIRECTORY__, "..", "..", "spice_kernels")
-    let spiceFileName = Path.Combine(spiceRoot, @"kernels/mk/hera_crema_2_0_LPO_ECP_PDP.tm")
+    if File.Exists spiceFileName then Log.line "using: %s" spiceFileName
+    else
+        Log.error "spice kernel: %s does not exist" spiceFileName
+        failwith "could not load spice kernels."
+
     System.Environment.CurrentDirectory <- Path.GetDirectoryName(spiceFileName)
     let r = CooTransformation.AddSpiceKernel(spiceFileName)
     if r <> 0 then failwith "could not add spice kernel"
 
                  
-    let time = cval args.startTime
+    let time = cval (DateTime.Parse args.startTime)
 
     let observer = observerBody |> AVal.map (fun o -> o.name)  
     let referenceFrame = args.referenceFrame
@@ -402,7 +437,7 @@ let main argv =
 
     win.Keyboard.KeyDown(Keys.T).Values.Add(fun _ -> 
         transact (fun _ -> 
-            time.Value <- args.startTime
+            time.Value <- DateTime.Parse args.startTime
             clearTrail()
         )
     )
@@ -433,12 +468,15 @@ let main argv =
         let mutable lastFrame = None
         win.AfterRender.Add(fun _ -> 
             transact (fun _ -> 
-                //match CooTransformation.getRelState "MARS" "SUN" observer time.Value referenceFrame with
-                //| Some targetState -> 
-                //    let rot = targetState.rot
-                //    let t = Trafo3d.FromBasis(rot.C0, rot.C1, rot.C2, V3d.Zero)
-                //    spacecraftTrafo.Value <- t
-                //| _ -> ()
+                let showCoordinateFrame = false
+                if showCoordinateFrame then
+                    let observer = observer.GetValue()
+                    match CooTransformation.getRelState "MARS" "SUN" observer time.Value referenceFrame with
+                    | Some targetState -> 
+                        let rot = targetState.rot
+                        let t = Trafo3d.FromBasis(rot.C0, rot.C1, rot.C2, V3d.Zero)
+                        spacecraftTrafo.Value <- t
+                    | _ -> ()
 
                 let dt = 
                     match lastFrame with

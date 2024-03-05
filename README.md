@@ -27,6 +27,7 @@ or use pull the submodule.
 ```
 dotnet tool restore
 dotnet paket restore
+./build.sh or .\build.cmd
 dotnet run --project src/PRo3D.SPICE.Tests/PRo3D.SPICE.Tests.fsproj
 ```
 ```
@@ -39,15 +40,25 @@ dotnet run --project src/PRo3D.SPICE.Tests/PRo3D.SPICE.Tests.fsproj
 dotnet run --project src/PRo3D.SPICE.RenderingDemo/PRo3D.SPICE.RenderingDemo.fsproj
 ```
 
-By setting observer to `mars` we can observe mars and its moons:
+## Command line flags
+
+The project `PRo3D.SPICe.RenderingDemo" supports several command line utilities.
+```
+cd ./bin/Debug/net6.0/
+dotnet PRo3D.SPICE.RenderingDemo.dll --time 2025-03-10 19:08:12.60 --timefactor 17856.0 --speed 100000000.0 --observer mars --referenceframe ECLIPJ2000
+```
+
 ![](docs/mars-flyby.gif)
+
+Another command-line setup could be:
+
+```
+dotnet PRo3D.SPICE.RenderingDemo.dll --time 2025-03-10 19:08:12.60 --timefactor 37856.0 --speed 100000000.0 --observer phobos --referenceframe ECLIPJ2000 --spiceKernel "../../../spice_kernels/kernels/mk/hera_crema_2_0_LPO_ECP_PDP.tm"
+```
+Note that a custom path to a spice kernel was supplied.
+
 By setting observer to `HERA` one can investigate the fly-by and animate the camera:
 ![Alt text](./docs/hera_observer.gif)
-
-
-# Running the interactive simluation animation tool
-
-will be here shortly. 
 
 # Integration in PRo3D
 
