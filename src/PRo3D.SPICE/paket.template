@@ -1,11 +1,11 @@
 type project
-id DevILSharp
-authors Aardvark Community
-owners Aardvark Community
-projectUrl https://github.com/aardvark-community/DevILSharp
-licenseUrl http://www.apache.org/licenses/LICENSE-2.0.txt
+id PRo3D.SPICE
+authors PRo3D.Space contributors
+owners pro3d-space
+projectUrl https://github.com/pro3d-space/PRo3D.SPICE
+licenseUrl https://github.com/pro3d-space/PRo3D.SPICE?tab=Apache-2.0-1-ov-file#readme
 repositoryType git
-repositoryUrl https://github.com/aardvark-community/DevILSharp
+repositoryUrl https://github.com/pro3d-space/PRo3D.SPICE
 description
-    DevILSharp is a simple wrapper around DevIL with Aardvark-style native dependencies.
+    SPICE tools for dotnet.
 include-pdbs true
