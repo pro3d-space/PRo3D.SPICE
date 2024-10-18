@@ -1,3 +1,6 @@
+### 1.0.3
+* updated aardvark packages
+
 ### 1.0.2 
 * better credits  
   
