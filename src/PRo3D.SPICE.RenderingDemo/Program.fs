@@ -21,8 +21,11 @@ open PRo3D.Extensions.FSharp
 open CommandLine
 open CommandLine.Text
 
+open Aardvark.FontProvider
+
 do Aardvark.Base.Aardvark.UnpackNativeDependencies(typeof<CooTransformation.RelState>.Assembly)
 
+type Font = GoogleFontProvider<"Roboto Mono">
 
 module Shaders =
 
@@ -288,6 +291,8 @@ let main argv =
             { name = b.name; pos = cval V3d.Zero; history = AdaptiveLine(); ndcSize = cval V2d.OO; radius = kmToMeters b.diameter * 0.5 }
         )
 
+    let font = Font.Font
+
 
     let animationStep () = 
         bodies |> Array.iter (fun b -> 
@@ -343,7 +348,7 @@ let main argv =
                     )
                 p, AVal.constant b.name
             )
-        Sg.texts Font.Symbola C4b.White (ASet.ofArray contents)
+        Sg.texts font C4b.White (ASet.ofArray contents)
 
 
 
@@ -360,7 +365,7 @@ let main argv =
 
     let info = 
         let content = time |> AVal.map (fun t -> sprintf "%s" (CooTransformation.Time.toUtcFormat t))
-        Sg.text Font.Symbola C4b.Gray content 
+        Sg.text font C4b.Gray content 
         |> Sg.trafo (scale |> AVal.map (fun s -> Trafo3d.Scale(0.1) * s * Trafo3d.Translation(-0.95,-0.95,0.0)))
      
     let help = 
@@ -370,7 +375,7 @@ let main argv =
                 "<t>    : reset time"
                 "<n>    : switch observer"
             ]
-        Sg.text Font.Symbola C4b.Gray (AVal.constant content)
+        Sg.text font C4b.Gray (AVal.constant content)
         |> Sg.trafo (scale |> AVal.map (fun s -> Trafo3d.Scale(0.05) * s * Trafo3d.Translation(-0.95, 0.95,0.0)))
 
     let lineSg = 

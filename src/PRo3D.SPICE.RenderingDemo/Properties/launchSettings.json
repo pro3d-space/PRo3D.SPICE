@@ -9,7 +9,7 @@
     },
     "PHOBOS": {
       "commandName": "Project",
-      "commandLineArgs": "--time 2025-03-10 19:08:12.60 --timefactor 37856.0 --speed 100000000.0 --observer phobos --referenceframe ECLIPJ2000 --spiceKernel \"../../../spice_kernels/kernels/mk/hera_crema_2_0_LPO_ECP_PDP.tm\""
+      "commandLineArgs": "--time 2025-03-10 19:08:12.60 --timefactor 37856.0 --speed 100000000.0 --observer mars --referenceframe ECLIPJ2000 --spiceKernel \"../../../spice_kernels/kernels/mk/hera_crema_2_0_LPO_ECP_PDP.tm\""
     }
   }
 }
