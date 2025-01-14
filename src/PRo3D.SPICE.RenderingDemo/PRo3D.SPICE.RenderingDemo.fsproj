@@ -11,8 +11,12 @@
     <OutputPath>..\..\bin\Release</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="paket.references" />
+    <Compile Include="CelestialBodies.fs" />
+    <Compile Include="SpiceInitialization.fs" />
+    <Compile Include="RenderingDemo.fs" />
+    <Compile Include="ScenarioViewer.fs" />
     <Compile Include="Program.fs" />
+    <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PRo3D.SPICE\PRo3D.SPICE.fsproj" />

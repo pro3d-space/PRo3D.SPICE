@@ -10,6 +10,10 @@
     "PHOBOS": {
       "commandName": "Project",
       "commandLineArgs": "--time 2025-03-10 19:08:12.60 --timefactor 37856.0 --speed 100000000.0 --observer mars --referenceframe ECLIPJ2000 --spiceKernel \"../../../spice_kernels/kernels/mk/hera_crema_2_0_LPO_ECP_PDP.tm\""
+    },
+    "EARTH_MOON": {
+      "commandName": "Project",
+      "commandLineArgs": "-k \"../../../spice_kernels/kernels/mk/hera_ops.tm\" --time 2024-10-05T14:17:02.233 --timefactor 6780.0 --speed 100000000.0 --observer earth --referenceframe ECLIPJ2000"
     }
   }
 }
