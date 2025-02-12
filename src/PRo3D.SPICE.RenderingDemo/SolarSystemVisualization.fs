@@ -240,9 +240,19 @@ let main (argv : array<string>) =
 
     let trajectories = 
         let getTrajectoryProperties (bodyName : string) =
-            (CelestialBodies.getOrbitLength bodyName, 45) |> AVal.constant
+            observer |> AVal.map (fun observer -> 
+                let body = CelestialBodies.getOrbitLength bodyName
+                let observer = CelestialBodies.getOrbitLength observer
+                body, 200
+            )
 
-        Rendering.trajectoryVisualization referenceFrame observer time getTrajectoryProperties (bodies |> AMap.toASetValues)
+        let color body = 
+            bodies |> AMap.tryFind body |> AVal.map (function
+                | None ->  C4b.White
+                | Some c -> C4b c.color
+            )
+
+        Rendering.trajectoryVisualization referenceFrame observer time getTrajectoryProperties (constF (AVal.constant true)) color (bodies |> AMap.toASetValues)
         
     let scene = 
         Sg.ofList [

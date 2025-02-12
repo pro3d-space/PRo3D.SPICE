@@ -375,118 +375,82 @@ module Rendering =
 
     let getTimeStepsPlain (samples : int) (trajectoryDurationInPast : TimeSpan) (currentTime : DateTime) =
         let sampleLength = trajectoryDurationInPast / float samples
-        Array.init samples (fun i -> 
+        List.init samples (fun i -> 
             let time = currentTime - sampleLength * float i
             let alpha = float i / float samples
             struct (time, alpha)
         ) 
 
-    let getTimeStepsTemporallyOptimized  (samples : int) (trajectoryDurationInPast : TimeSpan) (oldTime : Option<DateTime>) (currentTime : DateTime) =
-        match oldTime with
-        | None -> getTimeStepsPlain samples trajectoryDurationInPast currentTime
-        | Some oldTime -> 
-            let newSamples = (currentTime - oldTime) / trajectoryDurationInPast 
-            let snappedCurrentTime = oldTime + newSamples * trajectoryDurationInPast
-            getTimeStepsPlain samples trajectoryDurationInPast oldTime
 
-
-    module Sg = 
-
-        let lines (colors : aval<struct(C4b*C4b)[]>) (lines : aval<Line3d[]>) =
-            
-            let call = 
-                lines |> AVal.map (fun lines ->
-                    DrawCallInfo(
-                        FaceVertexCount = 2 * lines.Length,
-                        InstanceCount = 1
-                    )
-                )
-
-            let positions =
-                lines |> AVal.map (fun l ->
-                    l |> Array.collect (fun l -> [|V3f l.P0; V3f l.P1|])
-                )
-
-            let colors =
-                colors |> AVal.map (fun l ->
-                    l |> Array.collect (fun struct (c0, c1) -> [|c0; c1|])
-                )
-            
-            Sg.RenderNode(call, IndexedGeometryMode.LineList)
-                |> Sg.vertexAttribute DefaultSemantic.Positions positions
-                |> Sg.vertexAttribute DefaultSemantic.Colors colors
-
-
-
-        [<ReflectedDefinition>]
-        let hsv2rgb (h : float) (s : float) (v : float) =
-            let s = clamp 0.0 1.0 s
-            let v = clamp 0.0 1.0 v
-
-            let h = h % 1.0
-            let h = if h < 0.0 then h + 1.0 else h
-            let hi = floor ( h * 6.0 ) |> int
-            let f = h * 6.0 - float hi
-            let p = v * (1.0 - s)
-            let q = v * (1.0 - s * f)
-            let t = v * (1.0 - s * ( 1.0 - f ))
-            match hi with
-                | 1 -> V3d(q,v,p)
-                | 2 -> V3d(p,v,t)
-                | 3 -> V3d(p,q,v)
-                | 4 -> V3d(t,p,v)
-                | 5 -> V3d(v,p,q)
-                | _ -> V3d(v,t,p)
-
-    let trajectoryVisualization (referenceFrame : string) (observer : aval<string>) (time : aval<DateTime>) (getTrajectorySamples : string -> aval<TimeSpan * int>) (bodies : aset<BodyDesc>) =
+    let trajectoryVisualization (referenceFrame : string) (observer : aval<string>) (time : aval<DateTime>) 
+                                (getTrajectorySamples : string -> aval<TimeSpan * int>) 
+                                (showTrajectory : string -> aval<bool>)
+                                (trajectoryColor : string -> aval<C4b>) (bodies : aset<BodyDesc>) =
  
-
-        let toColor (v : V3d) = v |> C4f |> C4b.op_Explicit
 
         let trajectories =
             bodies
             |> ASet.mapA (fun b -> 
                 adaptive {
-                    let! trajectoryLength, trajectorySamples = getTrajectorySamples(b.name)
-                    // this one only works properly when getTimeStemps provides temporal coherence (which is currently not the case)
-                    let cache = LruCache(int64 (trajectorySamples*4))
-                    let! observer = observer
+                    let! show = showTrajectory b.name
+                    if show then
+                        let! trajectoryLength, trajectorySamples = getTrajectorySamples(b.name)
 
-                    let mutable hits = 0
-                    let getPosition time = 
-                        let mutable wasHit = true
-                        let r = 
-                            cache.GetOrAdd(time, 1, fun _ -> 
-                                wasHit <- false
-                                CooTransformation.getRelState b.name defaultSupportBodyWhenIrrelevant observer time referenceFrame
-                            )
-                        if wasHit then 
-                            hits <- hits + 1
-                        r
+                        // this one only works properly when getTimeStemps provides temporal coherence (which is currently not the case)
+                        let cache = LruCache(int64 (trajectorySamples))
+                       
+                        let! observer = observer
 
-                    let mutable oldTime = None
-                    let mutable oldTimes = []
-                    let! time = time
-                    let times = getTimeStepsTemporallyOptimized trajectorySamples trajectoryLength oldTime time
-                    oldTimes <- times |> Seq.toList
-                    oldTime <- Some time
+                        let mutable hits = 0
+                        let getPosition (time : DateTime) = 
+                            let mutable wasHit = true
+                            let r = 
+                                cache.GetOrAdd(time, 1, fun _ -> 
+                                    wasHit <- false
+                                    CooTransformation.getRelState b.name defaultSupportBodyWhenIrrelevant observer time referenceFrame
+                                )
+                            if wasHit then 
+                                hits <- hits + 1
+                            r
 
-                    hits <- 0
-                    let r = 
-                        times 
-                        |> Array.pairwise 
-                        |> Array.choose (fun (struct (t0, alpha0), struct (t1, alpha1)) -> 
-                            match getPosition t0, getPosition t1 with
-                            | Some p0, Some p1 ->
-                                let c0 = Sg.hsv2rgb (float alpha0) 1.0 1.0
-                                let c1 = Sg.hsv2rgb (float alpha1) 1.0 1.0
-                                Some (Line3d(p0.pos, p1.pos), struct (toColor c0, toColor c1))
+                        let mutable oldTime = None
+                        let mutable oldTimes = [||]
+                        let! time = time
+                        let times = 
+                            // very ugly hack to allow smooth anomation and vary dynamic trajectory setting at the same time (it could be refactored as an alist acutally)
+                            let lessThanOneSampleAway (ts : TimeSpan) = ts < (trajectoryLength / float trajectorySamples)
+                            let lessThanTwoAway (ts : TimeSpan) = ts < (trajectoryLength / float trajectorySamples) * 2.0
+                            match oldTime with
+                            | Some lastTime when lessThanOneSampleAway (time - lastTime) && oldTimes.Length >= trajectorySamples -> 
+                                oldTimes[0] <- struct (time, 1.0)
+                                oldTimes
+                            | Some lastTime when lessThanTwoAway (time - lastTime) && oldTimes.Length >= trajectorySamples ->
+                                oldTime <- Some time
+                                Array.append [|struct (time, 1.0)|] oldTimes[0 .. oldTimes.Length - 2]
                             | _ -> 
-                                None
-                        )
-                    //printfn "hits %s: %d/%d" b.name hits  times.Length
+                                oldTime <- Some time
+                                getTimeStepsPlain trajectorySamples trajectoryLength time |> List.toArray
+                                
 
-                    return r
+                        hits <- 0
+                        let r = 
+                            times 
+                            |> Seq.toArray
+                            |> Array.choose (fun (struct (t, alpha)) -> 
+                                getPosition t
+                            )
+                            |> Array.pairwise
+                            |> Array.map (fun (p0, p1) -> 
+                                Line3d(p0.pos, p1.pos)
+                            )
+                            |> Seq.toArray
+
+                        oldTimes <- times |> Seq.toArray
+                        //printfn "hits %s: %d/%d" b.name hits  times.Length
+
+                        return r, trajectoryColor b.name
+                    else 
+                        return [||], trajectoryColor b.name
                 }
             ) 
 
@@ -494,22 +458,21 @@ module Rendering =
             trajectories.Content
             |> AVal.map (fun trajectories ->
                 match Seq.tryHead trajectories with
-                | Some t -> 
+                | Some (t,_) -> 
                     match Array.tryHead t with
-                    | Some (l, _) -> Trafo3d.Translation l.P0
+                    | Some l -> Trafo3d.Translation l.P0
                     | _ -> Trafo3d.Identity
                 | _ -> Trafo3d.Identity
              )
 
         let trajectoryVisualizations = 
             trajectories
-            |> ASet.map (fun trajectory ->
+            |> ASet.map (fun (trajectory, c) ->
                 let lines = 
                     offset |> AVal.map (fun offset -> 
-                        trajectory |> Array.map (fun (l, _) -> l.Transformed(offset.Backward))
+                        trajectory |> Array.map (fun l -> l.Transformed(offset.Backward))
                     )
-                let colors = trajectory |> Array.map snd
-                Sg.lines (AVal.constant colors) lines
+                Sg.lines c lines
                 |> Sg.trafo offset
             )
             |> Sg.set

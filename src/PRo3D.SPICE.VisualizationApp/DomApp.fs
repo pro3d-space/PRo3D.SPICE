@@ -1,6 +1,6 @@
 ﻿namespace PRo3D.SPICE.VisualizationApp
 
-
+open System
 open System.Threading
 open System.Threading.Tasks
 open System.Text.Json
@@ -78,7 +78,6 @@ module DomApp =
 
                     Shader { DefaultSurfaces.trafo; DefaultSurfaces.simpleLighting }  
                     Sg.Draw (Aardvark.SceneGraph.IndexedGeometryPrimitives.solidPhiThetaSphere Sphere3d.Unit 20 C4b.White)
-                    RenderControlBuilderExt.wrap sg
                 }
             
             }
@@ -86,7 +85,7 @@ module DomApp =
 
     let app _ =
         {
-            initial = { count = 0; }
+            initial = { trajectoryLength = TimeSpan.Zero; count = 0; currentTime = DateTime.Now }
             update = update
             view = view
             unpersist = Unpersist.instance
