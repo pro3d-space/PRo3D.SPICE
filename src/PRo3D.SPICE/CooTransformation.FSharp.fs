@@ -41,5 +41,19 @@ module CooTransformation =
         if r <> 0 then 
             None
         else 
+            // CooTransformation stores row 
             Some { pos = V3d(p[0],p[1],p[2]); vel = V3d.Zero; rot = M33d(m).Transposed }
 
+
+    let getRotationTrafo (fromFrame : string) (toFrame : string) (time : DateTime) =
+        let m : double[] = Array.zeroCreate 9
+        let pdMat = fixed &m[0]
+        let r = CooTransformation.GetPositionTransformationMatrix(fromFrame, toFrame, Time.toUtcFormat time, pdMat) 
+        let rot = M33d(m)
+        if r = 0 && rot.Determinant > 0.95 then
+            let forward = M44d(rot.Transposed)
+            Trafo3d(forward, forward.Inverse) |> Some
+        else
+            printfn "could not get rot trafo for frame: %s" fromFrame
+            Trafo3d.Identity |> Some
+            

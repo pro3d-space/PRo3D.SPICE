@@ -203,7 +203,6 @@ let main (argv : array<string>) =
         }
 
 
-    let distanceSunPluto = 5906380000.0 * 1000.0
     let frustum = win.Sizes |> AVal.map (fun s -> Frustum.perspective 60.0 1000.0 distanceSunPluto (float s.X / float s.Y))
     let aspect = win.Sizes |> AVal.map (fun s -> float s.X / float s.Y)
 

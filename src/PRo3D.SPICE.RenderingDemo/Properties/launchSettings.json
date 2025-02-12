@@ -9,11 +9,19 @@
     },
     "PHOBOS": {
       "commandName": "Project",
-      "commandLineArgs": "--time 2025-03-10 19:08:12.60 --timefactor 37856.0 --speed 100000000.0 --observer mars --referenceframe ECLIPJ2000 --spiceKernel \"../../../spice_kernels/kernels/mk/hera_crema_2_0_LPO_ECP_PDP.tm\""
+      "commandLineArgs": "--time 2025-03-10 19:08:12.60 --timefactor 3156.0 --speed 100000000.0 --observer mars --referenceframe ECLIPJ2000 --spiceKernel \"../../../spice_kernels/kernels/mk/hera_crema_2_1_v171_20250108_001.tm\""
     },
     "EARTH_MOON": {
       "commandName": "Project",
-      "commandLineArgs": "-k \"../../../spice_kernels/kernels/mk/hera_ops.tm\" --time 2024-10-05T14:17:02.233 --timefactor 6780.0 --speed 100000000.0 --observer earth --referenceframe ECLIPJ2000"
+      "commandLineArgs": "-k \"../../../spice_kernels/kernels/mk/hera_ops.tm\" --time 2024-11-05T14:17:02.233 --timefactor 6780.0 --speed 100000000.0 --observer earth --referenceframe ECLIPJ2000"
+    },
+    "ECLIPSE25": {
+      "commandName": "Project",
+      "commandLineArgs": "-k \"../../../spice_kernels/kernels/mk/hera_ops.tm\" --time 2025-03-29T10:48:36.000 --timefactor 600.0 --speed 100000000.0 --observer earth --referenceframe ECLIPJ2000"
+    },
+    "PhobosEclipse": {
+      "commandName": "Project",
+      "commandLineArgs": "-k \"../../../spice_kernels/kernels/mk/hera_ops.tm\" --time 2025-03-30T18:30:36.000 --timefactor 6.0 --speed 100000000.0 --observer phobos --referenceframe ECLIPJ2000"
     }
   }
 }

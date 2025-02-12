@@ -1,5 +1,5 @@
 source https://api.nuget.org/v3/index.json
-framework: net6.0
+framework: net6.0, net8.0
 storage: none
 
 nuget FSharp.Core                           >= 8.0.1 lowest_matching: true
@@ -19,9 +19,26 @@ nuget Aardvark.Application.Slim             ~> 5.5.0
 nuget Aardvark.Application.Slim.GL          ~> 5.5.0
 nuget Aardvark.Application.Slim.Vulkan      ~> 5.5.0
 
+nuget Aardvark.Geometry.PolyMesh            ~> 5.5.4          
+nuget Aardvark.Reconstruction               ~> 0.2.2
+
 nuget Aardvark.FontProvider                 ~> 0.1.0
+
+nuget Aardvark.Dom.Remote
+nuget Aardvark.Dom.Elm
+nuget Aardvark.Dom.Giraffe
+nuget Aardvark.Dom.Utilities
+
+nuget Aardvark.Service
+nuget Aardvark.UI
+nuget Aardvark.UI.Primitives
+
+nuget Aardium
+
+nuget Aardvark.PixImage.DevIL ~> 5.2.33
 
 nuget Expecto                  ~> 9.0.4
 nuget Expecto.FsCheck          ~> 9.0.4
+
 
 nuget CommandLineParser.FSharp ~> 2.9.1

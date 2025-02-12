@@ -12,7 +12,7 @@ module SPICE =
     let initializeAndLoadKernels (spiceKernelFileName : string) =
 
         let init = 
-            let r = CooTransformation.Init(true, Path.Combine(".", "logs", "CooTrafo.Log"), 2, 2)
+            let r = CooTransformation.Init(false, Path.Combine(".", "logs", "CooTrafo.Log"), 0, 0)
             if r <> 0 then failwith "could not initialize CooTransformation lib."
             { new IDisposable with member x.Dispose() = CooTransformation.DeInit() }
 

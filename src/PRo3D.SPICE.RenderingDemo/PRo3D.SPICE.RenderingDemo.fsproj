@@ -11,10 +11,14 @@
     <OutputPath>..\..\bin\Release</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="FrustumVisualization.fs" />
+    <Compile Include="HeraFrusta.fs" />
     <Compile Include="CelestialBodies.fs" />
+    <Compile Include="Rendering.fs" />
     <Compile Include="SpiceInitialization.fs" />
     <Compile Include="RenderingDemo.fs" />
     <Compile Include="ScenarioViewer.fs" />
+    <Compile Include="SolarSystemVisualization.fs" />
     <Compile Include="Program.fs" />
     <None Include="paket.references" />
   </ItemGroup>

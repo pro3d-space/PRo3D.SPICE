@@ -13,4 +13,11 @@ Aardvark.Application.Slim.Vulkan
 Aardvark.SceneGraph
 Aardvark.FontProvider
 
+Aardvark.Geometry.PolyMesh 
+
+Aardvark.PixImage.DevIL
+
+
 CommandLineParser.FSharp
+
+Aardvark.Reconstruction 

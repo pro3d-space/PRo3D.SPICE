@@ -4,6 +4,7 @@ VisualStudioVersion = 17.8.34112.27
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{444D528F-C9E0-480D-9021-4765FD7CBAAD}"
 	ProjectSection(SolutionItems) = preProject
+		adapt.cmd = adapt.cmd
 		paket.dependencies = paket.dependencies
 		README.md = README.md
 		RELEASE_NOTES.md = RELEASE_NOTES.md
@@ -14,6 +15,8 @@ EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "PRo3D.SPICE.Tests", "src\PRo3D.SPICE.Tests\PRo3D.SPICE.Tests.fsproj", "{1C10AD61-C36D-444B-85D1-4A6B9CBC8E26}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PRo3D.SPICE.RenderingDemo", "src\PRo3D.SPICE.RenderingDemo\PRo3D.SPICE.RenderingDemo.fsproj", "{2CA8BE9C-504B-4FC1-B7BB-BA3F6A21EB34}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PRo3D.SPICE.VisualizationApp", "src\PRo3D.SPICE.VisualizationApp\PRo3D.SPICE.VisualizationApp.fsproj", "{543D22E7-5C79-4E68-A6A0-1986D03D6698}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +36,10 @@ Global
 		{2CA8BE9C-504B-4FC1-B7BB-BA3F6A21EB34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CA8BE9C-504B-4FC1-B7BB-BA3F6A21EB34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2CA8BE9C-504B-4FC1-B7BB-BA3F6A21EB34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{543D22E7-5C79-4E68-A6A0-1986D03D6698}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{543D22E7-5C79-4E68-A6A0-1986D03D6698}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{543D22E7-5C79-4E68-A6A0-1986D03D6698}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{543D22E7-5C79-4E68-A6A0-1986D03D6698}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
