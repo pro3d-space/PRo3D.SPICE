@@ -74,10 +74,10 @@ module CelestialBodies =
             "neptune", 60182.0
             "phobos", 0.31891
             "deimos", 1.263
-            "hera", 5.0
+            "hera", 300.0
         ]
 
     let getOrbitLength (bodyName : string) =
-        match Map.tryFind bodyName orbitLength with
+        match Map.tryFind (bodyName.ToLower()) orbitLength with
         | Some lengthInDays -> TimeSpan.FromDays(lengthInDays)
         | None -> TimeSpan.FromDays(12)
