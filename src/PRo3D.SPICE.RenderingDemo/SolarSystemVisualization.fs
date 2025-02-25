@@ -1,5 +1,7 @@
 ﻿module SolarSystemVisualization
 
+open System.Globalization
+
 
 #nowarn "9"
 
@@ -24,6 +26,7 @@ open CommandLine.Text
 open Aardvark.FontProvider
 
 open PRo3D.SPICE
+open PRo3D.Base
 
 do Aardvark.Base.Aardvark.UnpackNativeDependencies(typeof<CooTransformation.RelState>.Assembly)
 
@@ -103,6 +106,18 @@ let scenarios =
         }
     |]
 
+
+//Some useful times with these kernels:
+
+//    Deimos Closest Approach (distance 299.933 km) time is 2025-03-12 12:10:23.528 UTC
+//    Deimos in AFC field-of-view:
+//        Start: 2025-03-12 11:52:20.482190 UTC, End: 2025-03-12 12:05:49.188895 UTC
+//        Start: 2025-03-12 12:07:47.939156 UTC, End: 2025-03-12 12:08:53.801684 UTC
+//    Mars Closest Approach (altitude 5681.148 km) time is 2025-03-12 12:50:49.268 UTC
+
+ 
+
+
 type CameraMode =
     | FreeFly
     | Orbit
@@ -133,7 +148,7 @@ let main (argv : array<string>) =
 
     use _ = SPICE.initializeAndLoadKernels args.spiceKernel
                  
-    let time = cval (DateTime.Parse args.startTime)
+    let time = cval (DateTime.Parse(args.startTime, CultureInfo.InvariantCulture))
 
     let observer = observerBody |> AVal.map (fun o -> o.name)  
     let currentObserver = CelestialBodies.bodySources |> Array.findIndex (fun b -> b.name = args.observerBody) |> cval
@@ -194,6 +209,107 @@ let main (argv : array<string>) =
         )
 
 
+    let currentObservation : cval<Option<Set<string> * (FitsDescription * string)>> = cval None
+
+    let instruments =
+        let frustum = Frustum.perspective 5.5306897076421 10.0 distanceSunPluto 1.0
+        Map.ofList [
+            "HERA_AFC-1", frustum
+            "HERA_AFC-2", frustum
+        ]
+                
+
+    let cameraEarthFlyBy (instrumentName : string) (date : DateTime) = 
+        AVal.custom (fun t -> 
+            let observer = observer.GetValue t
+            let supportBody = "SUN"
+            let afc1Pos = CooTransformation.getRelState instrumentName supportBody observer date referenceFrame
+            let moon = CooTransformation.getRelState "MOON" supportBody observer date referenceFrame
+            let earthState = CooTransformation.getRelState "EARTH" supportBody observer date referenceFrame
+            match afc1Pos, moon, earthState with    
+            | Some afcPos1, Some moonState, Some earthState -> 
+                let focusMiddleEarthMoon = (moonState.pos + earthState.pos) * 0.5
+                let afc_z = afcPos1.pos - focusMiddleEarthMoon |> Vec.normalize
+                let afc_y = Vec.cross afc_z afcPos1.pos.Normalized |> Vec.normalize
+                let afc_x = Vec.cross afc_y afc_z
+                let cam = CameraView.lookAt afcPos1.pos focusMiddleEarthMoon -afc_y
+                Some cam
+            | _ -> 
+                None
+        )
+            
+    let earthFlyBy (instrument : string) (fits : FitsDescription) =
+        cameraEarthFlyBy instrument fits.observationDate |> AVal.map (function
+            | None -> None
+            | Some extrinsic ->
+                match Map.tryFind instrument instruments with
+                | None -> None
+                | Some frustum -> 
+                    let cam = Camera.create extrinsic frustum
+                    Some cam
+        )
+
+    let observations = 
+        Frusta.parseObservations @"C:\pro3ddata\HERA\fake"
+        |> Array.map (fun o -> 
+            Set.ofList ["earth"; "moon"], o
+        )
+
+    let getObservationCamera (planet : string) =
+        currentObservation |> AVal.bind (function 
+            | None -> 
+                AVal.constant None
+            | Some (validForPlanets, (fits, _)) ->
+                if Set.contains planet validForPlanets then
+                    //earthFlyBy fits.instrument fits 
+                    earthFlyBy "HERA_AFC-1" fits
+                else
+                    AVal.constant None
+        )
+
+
+    let startTime = DateTime.Parse("2025-03-11 11:52:20.482190", CultureInfo.InvariantCulture)
+    let endTime = DateTime.Parse("2025-03-12 13:20:20.482190", CultureInfo.InvariantCulture)
+    let shots = (endTime - startTime) / TimeSpan.FromMinutes(1) |> ceil |> int
+    let interval = (endTime - startTime) / float shots
+    let snapshots = [ 0 .. shots ] |> List.map (fun i -> startTime + interval * float i) |> List.toArray
+        
+
+    let computeMarsFlyByCam (referenceFrame : string) (time : DateTime) =
+        let supportBody = "SUN"
+        let instrumentName = "HERA"
+        let observer = observerBody.Value.name
+        if true then
+            let afc1Pos = CooTransformation.getRelState instrumentName supportBody observer time referenceFrame
+            match afc1Pos with    
+            | Some targetState -> 
+                let rot = targetState.rot
+                let t = Trafo3d.FromBasis(rot.C0, rot.C1, rot.C2, targetState.pos)
+                //CameraView.lookAt targetState.pos V3d.Zero V3d.OOI |> Some
+                CameraView.ofTrafo t.Inverse |> Some 
+            | _ -> 
+                None
+        else
+            let afc1Pos = CooTransformation.getRelState instrumentName supportBody observer time referenceFrame
+            let phobos = CooTransformation.getRelState "PHOBOS" supportBody observer time referenceFrame
+            match afc1Pos, phobos with    
+            | Some afcPos1, Some phobosPos ->
+                let afc_z = afcPos1.pos - phobosPos.pos |> Vec.normalize
+                let afc_y = Vec.cross afc_z afcPos1.pos.Normalized |> Vec.normalize
+                let afc_x = Vec.cross afc_y afc_z
+                let t = Trafo3d.FromBasis(afc_x, afc_y, afc_z, afcPos1.pos)
+                let camView  = CameraView.lookAt afcPos1.pos phobosPos.pos afc_y
+                Some camView
+            | _ -> None
+
+    let projectedTexture (planet : string) : aval<ITexture> = 
+        currentObservation |> AVal.bind (function 
+            | None -> 
+                NullTexture.InstanceConst
+            | Some (_, (_, img)) ->
+                AVal.constant (FileTexture(img))
+        )
+
     let inNdcBox =
         let box = Box3d.FromPoints(V3d(-1,-1,-1),V3d(1,1,1))
         fun (p : V3d) -> box.Contains p
@@ -208,26 +324,42 @@ let main (argv : array<string>) =
             None
 
     let shadowMap, colorDepthMap, shadowMapValid, shadowMapCamera  = 
-        let bodyVisualization = Rendering.bodiesVisualization args.referenceFrame supportBody (bodies |> AMap.toASetValues) observer time id 
+        let bodyVisualization = Rendering.bodiesVisualization args.referenceFrame supportBody (bodies |> AMap.toASetValues) observer time (fun _ sg -> sg) 
         Rendering.renderShadowMap win.Runtime args.referenceFrame supportBody bodyVisualization observer time
 
-    let wrapModel (sg : ISg) =
-        Rendering.StableTrafoSceneGraphExtension.Sg.wrapStableShadowViewProjTrafo (shadowMapCamera |> AVal.map Camera.viewProjTrafo) sg
 
-    let bodyVisualization = 
-        Rendering.bodiesVisualization args.referenceFrame supportBody (bodies |> AMap.toASetValues) observer time wrapModel 
+    let customObservationCamera = cval None
 
-
+    let getProjectionTrafo (planet : string) : aval<Option<Trafo3d>> = 
+        getObservationCamera planet |> AVal.map (function None -> None | Some c -> Camera.viewProjTrafo c |> Some)
 
     let shadowMapBias = cval -0.017
     let shadowMapBias = cval -0.000015
-    let scene =
+
+    let wrapModel (planet : string) (sg : ISg) =
+        let projectedTexture = projectedTexture planet
+        let projectedImageTrafo = getProjectionTrafo planet
+        sg 
+        |> Sg.applyProjectedImage getObservationCamera 
+        |> Rendering.StableTrafoSceneGraphExtension.Sg.wrapStableShadowViewProjTrafo (shadowMapCamera |> AVal.map Camera.viewProjTrafo) 
+        |> Sg.texture "ProjectedTexture" projectedTexture
+        |> Sg.uniform "ProjectedImageModelViewProjValid" (projectedImageTrafo |> AVal.map Option.isSome)
+
+
+    let simulatedObservation =
+        let bodyVisualization = Rendering.bodiesVisualization args.referenceFrame supportBody (bodies |> AMap.toASetValues) observer time wrapModel
+        let cam = 
+            customObservationCamera 
+            //getObservationCamera "earth"
+        let signature = 
+           win.Runtime.CreateFramebufferSignature [
+               DefaultSemantic.Colors, TextureFormat.Rgba8
+               DefaultSemantic.DepthStencil, TextureFormat.DepthComponent32f
+           ]
         bodyVisualization
-        |> Sg.uniform "HasShadowMap" shadowMapValid
-        |> Sg.texture "ShadowMap" shadowMap
-        |> Sg.uniform' "ShadowMapBias" shadowMapBias
-        |> Rendering.StableTrafoSceneGraphExtension.Sg.wrapStableShadowViewProjTrafo (shadowMapCamera |> AVal.map Camera.viewProjTrafo)
-        |> Sg.shader {
+        |> Sg.viewTrafo (cam |> AVal.map (function Some c -> Camera.viewTrafo c | None -> Trafo3d.Identity))
+        |> Sg.projTrafo (cam |> AVal.map (function Some c -> Camera.projTrafo c | None -> Trafo3d.Identity))
+        |> Sg.shader { 
             do! Rendering.Shaders.transformShadowVertices
             //do! Rendering.Shaders.normalMap
             do! Rendering.Shaders.genAndFlipTextureCoord // for some reason v needs to be 1- flipped. 
@@ -235,7 +367,74 @@ let main (argv : array<string>) =
             do! Rendering.Shaders.stableTrafo
             do! DefaultSurfaces.diffuseTexture
             do! Rendering.Shaders.shadow
+            //do! Rendering.Shaders.shadowPCF
             do! Rendering.Shaders.solarLightingWithSpecular
+        }
+        |> Sg.uniform "HasShadowMap" shadowMapValid
+        |> Sg.texture "ShadowMap" shadowMap
+        |> Sg.uniform' "ShadowMapBias" shadowMapBias
+        |> Sg.compile win.Runtime signature
+        |> RenderTask.renderToColor (AVal.constant (V2i.II * 1024))
+
+
+
+    let allObservations = 
+        let startTime = DateTime.Parse("2025-03-12 10:50:20.482190Z", CultureInfo.InvariantCulture)
+        let endTime = DateTime.Parse("2025-03-12 15:50:20.482190Z", CultureInfo.InvariantCulture)
+        let shots = (endTime - startTime) / TimeSpan.FromMinutes(1) |> ceil |> int
+        let interval = (endTime - startTime) / float shots
+        let snapshots = [ 0 .. shots ] |> List.map (fun i -> startTime + interval * float i) |> List.toArray
+        time |> AVal.map (fun _ -> 
+            snapshots 
+            |> Array.choose (fun time -> 
+                match computeMarsFlyByCam referenceFrame time, CooTransformation.getRelState "HERA" "SUN" "MARS" time referenceFrame, CooTransformation.getRotationTrafo "IAU_MARS" referenceFrame time  with
+                | Some camInMarsSpace, Some rel, Some t -> 
+                    let frustum = instruments["HERA_AFC-1"]
+                    let v1 = CameraView.viewTrafo camInMarsSpace
+                    let view = CameraView.lookAt rel.pos V3d.Zero V3d.OOI 
+                    let forward = (t * CameraView.viewTrafo camInMarsSpace * Frustum.projTrafo frustum).Forward
+                    forward |> M44f.op_Explicit |> Some
+
+                | _ -> 
+                    None
+            )
+        )
+
+
+    let wrapModel (planet : string) (sg : ISg) =
+        let projectedTexture = projectedTexture planet
+        let projectedImageTrafo = fun _ -> customObservationCamera :> aval<_> // getProjectionTrafo planet
+        sg 
+        |> Sg.applyProjectedImage projectedImageTrafo 
+        |> Sg.uniform "ProjectedImagesLocalTrafos" allObservations
+        |> Sg.uniform "ProjectedImagesLocalTrafosCount" (allObservations |> AVal.map Array.length)
+        |> Rendering.StableTrafoSceneGraphExtension.Sg.wrapStableShadowViewProjTrafo (shadowMapCamera |> AVal.map Camera.viewProjTrafo) 
+        |> Sg.texture "ProjectedTexture" simulatedObservation
+        |> Sg.uniform "ProjectedImageModelViewProjValid" (customObservationCamera |> AVal.map Option.isSome)
+
+    let bodyVisualization = 
+        Rendering.bodiesVisualization args.referenceFrame supportBody (bodies |> AMap.toASetValues) observer time wrapModel 
+
+        
+
+    let scene =
+        bodyVisualization
+        |> Sg.uniform "HasShadowMap" shadowMapValid
+        |> Sg.texture "ShadowMap" shadowMap
+        |> Sg.uniform' "ShadowMapBias" shadowMapBias
+        |> Sg.shader {
+            do! ImageProjection.Shaders.stableImageProjectionTrafo
+            do! Rendering.Shaders.transformShadowVertices
+            //do! Rendering.Shaders.normalMap
+            do! Rendering.Shaders.genAndFlipTextureCoord // for some reason v needs to be 1- flipped. 
+            do! DefaultSurfaces.sgColor
+            do! Rendering.Shaders.stableTrafo
+            do! DefaultSurfaces.diffuseTexture
+            do! Rendering.Shaders.shadow
+            //do! Rendering.Shaders.shadowPCF
+            do! Rendering.Shaders.solarLightingWithSpecular
+            do! ImageProjection.Shaders.stableImageProjection
+            do! ImageProjection.Shaders.localImageProjections
         }
 
     let trajectories = 
@@ -243,7 +442,7 @@ let main (argv : array<string>) =
             observer |> AVal.map (fun observer -> 
                 let body = CelestialBodies.getOrbitLength bodyName
                 let observer = CelestialBodies.getOrbitLength observer
-                body, 200
+                TimeSpan.FromDays(1), 200
             )
 
         let color body = 
@@ -335,6 +534,26 @@ let main (argv : array<string>) =
         |> Sg.viewTrafo' Trafo3d.Identity
         |> Sg.projTrafo' Trafo3d.Identity
 
+    let observationSimluationVisualization = 
+        Sg.fullScreenQuad 
+        |> Sg.andAlso (
+            // border round the texture visualization to distinguish between black and no visualization
+            Sg.fullScreenQuad 
+            |> Sg.fillMode' FillMode.Line 
+            |> Sg.shader { 
+                do! DefaultSurfaces.trafo; 
+                do! DefaultSurfaces.constantColor C4f.White 
+            }
+        )
+        |> Sg.trafo' (Trafo3d.Scale(0.2) * Trafo3d.Translation(0.7,-0.5,0.0))
+        |> Sg.texture DefaultSemantic.DiffuseColorTexture simulatedObservation
+        |> Sg.shader {
+            do! DefaultSurfaces.trafo
+            do! DefaultSurfaces.diffuseTexture
+        }
+        |> Sg.viewTrafo' Trafo3d.Identity
+        |> Sg.projTrafo' Trafo3d.Identity
+
 
     let sg = 
         Sg.ofList [
@@ -343,6 +562,7 @@ let main (argv : array<string>) =
             help
             bodyLabels
             shadowMapVisualization
+            observationSimluationVisualization
             trajectories
         ]
 
@@ -362,6 +582,9 @@ let main (argv : array<string>) =
                     | Some l -> sw.Elapsed - l
 
                 time.Value <- time.Value + dt * args.timeToSimluationTime
+                let frustum = instruments.["HERA_AFC-1"]
+                let view = (computeMarsFlyByCam referenceFrame time.Value).Value
+                customObservationCamera.Value <- Some (Camera.create view frustum)
                 animationStep()
                 lastFrame <- Some sw.Elapsed
             )
@@ -376,6 +599,17 @@ let main (argv : array<string>) =
         )
     )
 
+    let mutable observationIdx = -1
+    win.Keyboard.KeyDown(Keys.N).Values.Add(fun _ -> 
+        transact (fun _ -> 
+            observationIdx <- (observationIdx + 1) % observations.Length
+            let (_,(f,_)) as observation = observations[observationIdx] 
+            currentObservation.Value <- observation |> Some
+            time.Value <- f.observationDate
+            printfn "%A" currentObservation.Value
+        )
+    )
+
     win.Keyboard.KeyDown(Keys.P).Values.Add(fun _ -> 
         let p = view.GetValue()
         Log.line "%A" p.Location
@@ -385,6 +619,36 @@ let main (argv : array<string>) =
             let p = m[v.X,v.Y]
             if p <> 1.0f then
                 printfn "%A" p
+        )
+    )
+
+
+    win.Keyboard.KeyDown(Keys.S).Values.Add(fun _ -> 
+        snapshots |> Array.iteri (fun i t -> 
+            
+            let view = (computeMarsFlyByCam referenceFrame time.Value).Value
+            let frustum = instruments.["HERA_AFC-1"]
+            transact (fun _ -> 
+                time.Value <- t
+                customObservationCamera.Value <- Some (Camera.create view frustum)
+            )
+        
+            let r = simulatedObservation.GetValue()
+            let pi = r.Download()
+            pi.Save(Path.Combine(@"C:\pro3ddata\HERA\simulated", $"SIMULATED_{i}.tif"))
+        )
+    )
+
+    let mutable i = 0
+    win.Keyboard.KeyDown(Keys.V).Values.Add(fun _ -> 
+        transact (fun _ -> 
+            i <- (i + 1) % snapshots.Length
+            time.Value <- snapshots[i]
+        )
+        let frustum = instruments.["HERA_AFC-1"]
+        let view = (computeMarsFlyByCam referenceFrame time.Value).Value
+        transact (fun _ -> 
+            initialView.Value <- view
         )
     )
 

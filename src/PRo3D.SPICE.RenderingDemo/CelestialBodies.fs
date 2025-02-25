@@ -37,7 +37,8 @@ module CelestialBodies =
         let getTexturePath (name : string) = 
             Path.combine [__SOURCE_DIRECTORY__; ".."; ".."; "resources"; name] |> Some
 
-        [|  { name = "sun"        ; color = C4f.White;     diameter = 1391016.0<km>;  goodObserver = "mercury"; diffuseMap = None; normalMap = None; specularMap = None; referenceFrame = None }
+        [|  
+            { name = "sun"        ; color = C4f.White;     diameter = 1391016.0<km>;  goodObserver = "mercury"; diffuseMap = None; normalMap = None; specularMap = None; referenceFrame = None }
             { name = "mercury"    ; color = C4f.Gray;      diameter = 4879.4<km>;     goodObserver = "earth"  ; diffuseMap = None; normalMap = None; specularMap = None; referenceFrame = None }
             { name = "venus"      ; color = C4f.AliceBlue; diameter = 12104.0<km>;    goodObserver = "earth"  ; diffuseMap = None; normalMap = None; specularMap = None; referenceFrame = None }
             { name = "earth"      ; color = C4f.Blue;      diameter = 12742.0<km>;    goodObserver = "moon"   ; 
@@ -47,8 +48,13 @@ module CelestialBodies =
                     referenceFrame = Some "IAU_EARTH"
             }
             { name = "moon"       ; color = C4f.DarkGray;  diameter = 3474.8<km>;     goodObserver = "earth"  ; diffuseMap = None; normalMap = None; specularMap = None; referenceFrame = None }
-            { name = "mars"       ; color = C4f.Red;       diameter = 6779.0<km>;     goodObserver = "phobos" ; diffuseMap = None; normalMap = None; specularMap = None; referenceFrame = None }
-            { name = "phobos"     ; color = C4f.Red;       diameter = 22.4<km>;       goodObserver = "mars"   ; diffuseMap = None; normalMap = None; specularMap = None; referenceFrame = None }
+            { name = "mars"       ; color = C4f.Red;       diameter = 6779.0<km>;     goodObserver = "phobos" ; 
+                    diffuseMap = getTexturePath "mar0kuu2.jpg"; 
+                    normalMap = None; specularMap = None; 
+                    referenceFrame = Some "IAU_MARS" }
+            { name = "phobos"     ; color = C4f.Red;       diameter = 22.4<km>;       goodObserver = "mars"   ; 
+                    diffuseMap = None; normalMap = None; specularMap = None; 
+                    referenceFrame = Some "IAU_PHOBOS" }
             { name = "deimos"     ; color = C4f.Red;       diameter = 12.4<km>;       goodObserver = "mars"   ; diffuseMap = None; normalMap = None; specularMap = None; referenceFrame = None }
             { name = "HERA"       ; color = C4f.Magenta;   diameter = 0.00001<km>;    goodObserver = "mars"   ; diffuseMap = None; normalMap = None; specularMap = None; referenceFrame = None }
         |]   

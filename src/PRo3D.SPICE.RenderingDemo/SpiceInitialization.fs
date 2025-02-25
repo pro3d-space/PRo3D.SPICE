@@ -12,7 +12,7 @@ module SPICE =
     let initializeAndLoadKernels (spiceKernelFileName : string) =
 
         let init = 
-            let r = CooTransformation.Init(false, Path.Combine(".", "logs", "CooTrafo.Log"), 0, 0)
+            let r = CooTransformation.Init(false, Path.Combine(".", "logs", "CooTrafo.Log"), 5,10000)
             if r <> 0 then failwith "could not initialize CooTransformation lib."
             { new IDisposable with member x.Dispose() = CooTransformation.DeInit() }
 
@@ -25,13 +25,16 @@ module SPICE =
             else
                 spiceKernelFileName
 
-        if File.Exists spiceFileName then Log.line "using: %s" spiceFileName
-        else
-            Log.error "spice kernel: %s does not exist" spiceFileName
-            failwith "could not load spice kernels."
+        let fullSpicePath = 
+            if File.Exists spiceFileName then 
+                Log.line "using: %s" spiceFileName
+                Path.GetFullPath spiceFileName
+            else
+                Log.error "spice kernel: %s does not exist" spiceFileName
+                failwith "could not load spice kernels."
 
         System.Environment.CurrentDirectory <- Path.GetDirectoryName(spiceFileName)
-        let r = CooTransformation.AddSpiceKernel(spiceFileName)
+        let r = CooTransformation.AddSpiceKernel(Path.GetFileName(fullSpicePath))
         if r <> 0 then failwith "could not add spice kernel"
 
         init

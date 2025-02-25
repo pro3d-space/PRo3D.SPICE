@@ -1,6 +1,7 @@
 ﻿module ScenarioViewer
 
 open PRo3D.Extensions.FSharp.CooTransformation
+open System.Globalization
 
 
 #nowarn "9"
@@ -136,7 +137,7 @@ let main (argv : array<string>) =
 
     use _ = SPICE.initializeAndLoadKernels args.spiceKernel
                  
-    let time = cval (DateTime.Parse args.startTime)
+    let time = cval (DateTime.Parse(args.startTime, CultureInfo.InvariantCulture))
 
     let observer = observerBody |> AVal.map (fun o -> o.name)  
     let referenceFrame = args.referenceFrame
@@ -181,7 +182,7 @@ let main (argv : array<string>) =
 
     let distanceSunPluto = 5906380000.0 * 1000.0
     let farPlane = 384400.0 * 1000.0
-    let frustum = win.Sizes |> AVal.map (fun s -> Frustum.perspective 5.5 0.1 farPlane (float s.X / float s.Y))
+    let frustum = win.Sizes |> AVal.map (fun s -> Frustum.perspective 5.3999996972995  0.1 farPlane (float s.X / float s.Y))
     let aspect = win.Sizes |> AVal.map (fun s -> float s.X / float s.Y)
     let scale = aspect |> AVal.map (fun aspect -> Trafo3d.Scale(V3d(1.0, aspect, 1.0)))
 
@@ -250,7 +251,9 @@ let main (argv : array<string>) =
                 let fullCam = { Aardvark.Reconstruction.Camera.view = camView; proj = afcProj }
 
                 let cameraView = CameraView.lookAt afcPos1.pos (afcPos1.pos + afc_z) afc_x
-                let frustum = Frustum.perspective 5.5 0.1 1000000000.0 (float fits.imageSize.X / float fits.imageSize.Y)
+                // 6.14521113074286 gons => 5.5306897076421 degrees
+                // 6.111111111111111 gons => 5.3999996972995 degrees
+                let frustum = Frustum.perspective 5.399999 0.1 1000000000.0 (float fits.imageSize.X / float fits.imageSize.Y)
 
                 Some {| fits = fits; trafo = camView.ViewTrafo; imageFileName = imageFileName; cam = fullCam; 
                         cameraView = cameraView; frustum = frustum |}

@@ -12,6 +12,8 @@ open Aardvark.Geometry
 open PRo3D.Extensions
 open PRo3D.Extensions.FSharp
 
+open PRo3D.Base
+
 module Rendering = 
 
 
@@ -187,7 +189,34 @@ module Rendering =
                 let bias : float = uniform?ShadowMapBias
                 let p = v.viewProjPos.XYZ / v.viewProjPos.W
                 let tc = V3d(0.5, 0.5,0.5) + V3d(0.5, 0.5, 0.5) * p.XYZ
-                let d = min 1.0 (max 0.0 (shadowSampler.Sample(tc.XY, tc.Z + bias)))
+                let d = min 1.0 (max 0.2 (shadowSampler.Sample(tc.XY, tc.Z + bias)))
+                return V4d(v.c.XYZ * d, v.c.W)
+            }
+
+        let offsets = 
+            [|
+                V2d(-1.0, -1.0)
+                V2d(1.0, -1.0)
+                V2d(-1.0, 1.0)
+                V2d(1.0, 1.0)
+            |]
+
+        let shadowPCF (v : ShadowVertex) =
+            fragment {
+                let bias : float = uniform?ShadowMapBias
+                let p = v.viewProjPos.XYZ / v.viewProjPos.W
+                let tc = V3d(0.5, 0.5, 0.5) + V3d(0.5, 0.5, 0.5) * p.XYZ
+
+                let sampleRadius = 1.0 / (float (Vec.MaxElement shadowSampler.Size)) 
+                let numSamples = 4
+
+                let mutable shadow = 0.0
+                for i in 0 .. offsets.Length - 1 do
+                    shadow <- shadow + shadowSampler.Sample(tc.XY + offsets[i] * sampleRadius, tc.Z + bias)
+
+                shadow <- shadow / float numSamples
+
+                let d = min 1.0 (max 0.2 shadow)
                 return V4d(v.c.XYZ * d, v.c.W)
             }
 
@@ -232,23 +261,23 @@ module Rendering =
             match rot, relState with
             | Some rot, Some relState -> 
                 Some (rot * Trafo3d.Translation relState.pos)
+                //Some (Trafo3d.Translation relState.pos)
             | None, Some relState -> relState.pos |> Trafo3d.Translation |> Some
             | _ -> 
                 None
         )
 
-    let bodiesVisualization (referenceFrame : string) (supportBody : aval<string>) (bodies : aset<BodyDesc>) (observer : aval<string>) 
-                            (time : aval<DateTime>) (wrapModel : ISg -> ISg) =
+    let bodiesVisualization (referenceFrame : string) (supportBody : aval<string>) 
+                            (bodies : aset<BodyDesc>) (observer : aval<string>) 
+                            (time : aval<DateTime>) (wrapModel : string -> ISg -> ISg) =
 
-        let sphericalUnitBody = 
-            let usePolyMesh = true
-            if usePolyMesh then
-                PolyMeshPrimitives.Sphere(30, 1.0, C4b.White, DefaultSemantic.DiffuseColorCoordinates, DefaultSemantic.DiffuseColorUTangents, DefaultSemantic.DiffuseColorVTangents)
-                                  .GetIndexedGeometry()
-                |> Sg.ofIndexedGeometry
-            else
-                IndexedGeometryPrimitives.solidPhiThetaSphere Sphere3d.Unit 64 C4b.White 
-                |> Sg.ofIndexedGeometry
+        let sphericalUnitBody (scale : float) = 
+            PolyMeshPrimitives.Sphere(30, 1.0, C4b.White, DefaultSemantic.DiffuseColorCoordinates, DefaultSemantic.DiffuseColorUTangents, DefaultSemantic.DiffuseColorVTangents)
+                                .Transformed(Trafo3d.Scale scale)
+                                .GetIndexedGeometry()
+
+            |> Sg.ofIndexedGeometry
+
 
         let fallbackTexture = 
             let whitePix =
@@ -283,11 +312,12 @@ module Rendering =
                 let createTexture (filePath : string) =
                     PixTexture2d(filePath |> PixImageMipMap.Load) :> ITexture
                 let radius = bodyDesc.diameter |> kmToMeters |> float 
-                sphericalUnitBody
-                |> wrapModel
-                |> Sg.scale radius
+                sphericalUnitBody radius // inefficient, but for a reason, see below for sg.scale
+                |> wrapModel bodyDesc.name
+                //|> Sg.scale radius (don't use model trafo for scaling here to make transformations less complex, trust me)
                 |> Sg.trafo (AVal.map fst transformation)
                 |> Sg.onOff (AVal.map snd transformation)
+                |> Sg.applyPlanet bodyDesc.name
                 |> Sg.uniform "SunDirectionWorld" sunDirection
                 |> Sg.uniform' "Color" bodyDesc.color
                 |> Sg.texture' DefaultSemantic.DiffuseColorTexture (bodyDesc.diffuseMap |> Option.map createTexture |> Option.defaultValue fallbackTexture)
@@ -417,14 +447,15 @@ module Rendering =
                         let mutable oldTimes = [||]
                         let! time = time
                         let times = 
+                            let opt = true
                             // very ugly hack to allow smooth anomation and vary dynamic trajectory setting at the same time (it could be refactored as an alist acutally)
                             let lessThanOneSampleAway (ts : TimeSpan) = ts < (trajectoryLength / float trajectorySamples)
                             let lessThanTwoAway (ts : TimeSpan) = ts < (trajectoryLength / float trajectorySamples) * 2.0
                             match oldTime with
-                            | Some lastTime when lessThanOneSampleAway (time - lastTime) && oldTimes.Length >= trajectorySamples -> 
+                            | Some lastTime when lessThanOneSampleAway (time - lastTime) && oldTimes.Length >= trajectorySamples  && opt -> 
                                 oldTimes[0] <- struct (time, 1.0)
                                 oldTimes
-                            | Some lastTime when lessThanTwoAway (time - lastTime) && oldTimes.Length >= trajectorySamples ->
+                            | Some lastTime when lessThanTwoAway (time - lastTime) && oldTimes.Length >= trajectorySamples && opt  ->
                                 oldTime <- Some time
                                 Array.append [|struct (time, 1.0)|] oldTimes[0 .. oldTimes.Length - 2]
                             | _ -> 

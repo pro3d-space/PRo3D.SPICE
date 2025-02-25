@@ -10,3 +10,6 @@ By NASA - Earth's Vital Signs, Public Domain, https://commons.wikimedia.org/w/in
 NormalMap.png: 
 from https://en.wikipedia.org/wiki/Equirectangular_projection#/media/File:World_elevation_map.png using https://cpetry.github.io/NormalMap-Online/
 By Avsa - Own work, CC BY-SA 4.0, https://commons.wikimedia.org/w/index.php?curid=135145446
+
+mar0kuu2.jpg:
+https://nasa3d.arc.nasa.gov/detail/mar0kuu2

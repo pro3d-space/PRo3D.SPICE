@@ -13,6 +13,7 @@
   <ItemGroup>
     <Compile Include="FrustumVisualization.fs" />
     <Compile Include="HeraFrusta.fs" />
+    <Compile Include="ImageProjection.fs" />
     <Compile Include="CelestialBodies.fs" />
     <Compile Include="Rendering.fs" />
     <Compile Include="SpiceInitialization.fs" />

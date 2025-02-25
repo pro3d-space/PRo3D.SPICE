@@ -9,6 +9,8 @@ open System.IO
 open System.Text.Json
 
 open Aardvark.Base
+open System.Globalization
+
 
 [<AutoOpen>]
 module Frusta = 
@@ -29,7 +31,7 @@ module Frusta =
         
         let image_width = root.GetProperty("image_width").GetInt32()
         let image_height = root.GetProperty("image_height").GetInt32()
-        let observationDate = heraFits.GetProperty("DATE-OBS").GetString() |> DateTime.Parse
+        let observationDate = DateTime.Parse(heraFits.GetProperty("DATE-OBS").GetString(), CultureInfo.InvariantCulture)
         let instrument = heraFits.GetProperty("INSTRUME").GetString()
         let missionPhase = heraFits.GetProperty("MISSPHAS").GetString()
 
@@ -47,16 +49,18 @@ module Frusta =
     let parseObservations (fitsJsonDir : string) =
         Directory.EnumerateFiles(fitsJsonDir, "*.tif")
         |> Seq.toArray
+        |> Array.sortBy Path.GetFileName
         |> Array.map (fun tifPath ->
             let fits = parseFitsDescriptionFromFile $"{tifPath}.json"
             let img = tifPath
             (fits, img)
         )
 
-    let test = 
+    let test() = 
         let testPath = @"C:\pro3ddata\HERA\HERA_Vision_2B-3\TIFFS_EarthMoon\EarthMoon\AFC1\AF1_00BAO3_241011T141702_1A.tif.json"
         testPath |> parseFitsDescriptionFromFile
 
-    let testDir = 
+    let testDir() = 
         let testPath = @"C:\pro3ddata\HERA\HERA_Vision_2B-3\TIFFS_EarthMoon\EarthMoon\AFC1\"
         testPath |> parseObservations
+
