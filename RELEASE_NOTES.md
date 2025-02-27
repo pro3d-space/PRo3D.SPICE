@@ -1,4 +1,4 @@
-### 1.0.3
+### 1.0.4
 * added getRotationTrafo
 
 ### 1.0.3
