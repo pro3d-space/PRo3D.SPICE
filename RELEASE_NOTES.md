@@ -1,4 +1,7 @@
 ### 1.0.3
+* added getRotationTrafo
+
+### 1.0.3
 * updated aardvark packages
 
 ### 1.0.2 
