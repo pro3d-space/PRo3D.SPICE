@@ -6,6 +6,7 @@ open System.Globalization
 #nowarn "9"
 
 open System
+open System.Text.Json
 open System.Threading
 open FSharp.NativeInterop
 open System.IO
@@ -27,6 +28,7 @@ open Aardvark.FontProvider
 
 open PRo3D.SPICE
 open PRo3D.Base
+open PRo3D.Core.Gis
 
 do Aardvark.Base.Aardvark.UnpackNativeDependencies(typeof<CooTransformation.RelState>.Assembly)
 
@@ -268,12 +270,21 @@ let main (argv : array<string>) =
         )
 
 
-    let startTime = DateTime.Parse("2025-03-11 11:52:20.482190", CultureInfo.InvariantCulture)
-    let endTime = DateTime.Parse("2025-03-12 13:20:20.482190", CultureInfo.InvariantCulture)
+    let startTime = DateTime.Parse("2025-03-12 11:52:20.482190Z", CultureInfo.InvariantCulture)
+    let endTime = DateTime.Parse("2025-03-12 12:35:20.482190Z", CultureInfo.InvariantCulture)
     let shots = (endTime - startTime) / TimeSpan.FromMinutes(1) |> ceil |> int
     let interval = (endTime - startTime) / float shots
-    let snapshots = [ 0 .. shots ] |> List.map (fun i -> startTime + interval * float i) |> List.toArray
-        
+    let snapshots = 
+        let times = [ 0 .. shots ] |> List.map (fun i -> startTime + interval * float i)
+        List.concat [
+            [DateTime.Parse("2025-03-12 12:08:48.482190Z", CultureInfo.InvariantCulture)]
+            times
+        ] 
+        |> List.toArray
+        |> Array.sort
+    printfn "snapshots: %d" snapshots.Length
+
+
 
     let computeMarsFlyByCam (referenceFrame : string) (time : DateTime) =
         let supportBody = "SUN"
@@ -284,7 +295,9 @@ let main (argv : array<string>) =
             match afc1Pos with    
             | Some targetState -> 
                 let rot = targetState.rot
-                let t = Trafo3d.FromBasis(rot.C0, rot.C1, rot.C2, targetState.pos)
+                let r = CooTransformation.getRotationTrafo "HERA_AFC-1" referenceFrame time 
+                let tt = r.Value
+                let t = Trafo3d.FromBasis(rot.C0, rot.C1, rot.C2, targetState.pos) 
                 //CameraView.lookAt targetState.pos V3d.Zero V3d.OOI |> Some
                 CameraView.ofTrafo t.Inverse |> Some 
             | _ -> 
@@ -360,15 +373,15 @@ let main (argv : array<string>) =
         |> Sg.viewTrafo (cam |> AVal.map (function Some c -> Camera.viewTrafo c | None -> Trafo3d.Identity))
         |> Sg.projTrafo (cam |> AVal.map (function Some c -> Camera.projTrafo c | None -> Trafo3d.Identity))
         |> Sg.shader { 
-            do! Rendering.Shaders.transformShadowVertices
+            do! Shaders.transformShadowVertices
             //do! Rendering.Shaders.normalMap
-            do! Rendering.Shaders.genAndFlipTextureCoord // for some reason v needs to be 1- flipped. 
+            do! Shaders.genAndFlipTextureCoord // for some reason v needs to be 1- flipped. 
             do! DefaultSurfaces.sgColor
-            do! Rendering.Shaders.stableTrafo
+            do! Shaders.stableTrafo
             do! DefaultSurfaces.diffuseTexture
-            do! Rendering.Shaders.shadow
+            do! Shaders.shadow
             //do! Rendering.Shaders.shadowPCF
-            do! Rendering.Shaders.solarLightingWithSpecular
+            do! Shaders.solarLightingWithSpecular
         }
         |> Sg.uniform "HasShadowMap" shadowMapValid
         |> Sg.texture "ShadowMap" shadowMap
@@ -379,9 +392,9 @@ let main (argv : array<string>) =
 
 
     let allObservations = 
-        let startTime = DateTime.Parse("2025-03-12 10:50:20.482190Z", CultureInfo.InvariantCulture)
-        let endTime = DateTime.Parse("2025-03-12 15:50:20.482190Z", CultureInfo.InvariantCulture)
-        let shots = (endTime - startTime) / TimeSpan.FromMinutes(1) |> ceil |> int
+        let startTime = DateTime.Parse("2025-03-12 11:30:20.482190Z", CultureInfo.InvariantCulture)
+        let endTime = DateTime.Parse("2025-03-12 15:20:20.482190Z", CultureInfo.InvariantCulture)
+        let shots = (endTime - startTime) / TimeSpan.FromMinutes(2) |> ceil |> int
         let interval = (endTime - startTime) / float shots
         let snapshots = [ 0 .. shots ] |> List.map (fun i -> startTime + interval * float i) |> List.toArray
         time |> AVal.map (fun _ -> 
@@ -424,17 +437,17 @@ let main (argv : array<string>) =
         |> Sg.uniform' "ShadowMapBias" shadowMapBias
         |> Sg.shader {
             do! ImageProjection.Shaders.stableImageProjectionTrafo
-            do! Rendering.Shaders.transformShadowVertices
+            do! Shaders.transformShadowVertices
             //do! Rendering.Shaders.normalMap
-            do! Rendering.Shaders.genAndFlipTextureCoord // for some reason v needs to be 1- flipped. 
+            do! Shaders.genAndFlipTextureCoord // for some reason v needs to be 1- flipped. 
             do! DefaultSurfaces.sgColor
-            do! Rendering.Shaders.stableTrafo
+            do! Shaders.stableTrafo
             do! DefaultSurfaces.diffuseTexture
-            do! Rendering.Shaders.shadow
+            //do! Shaders.shadow
             //do! Rendering.Shaders.shadowPCF
-            do! Rendering.Shaders.solarLightingWithSpecular
-            do! ImageProjection.Shaders.stableImageProjection
-            do! ImageProjection.Shaders.localImageProjections
+            //do! Shaders.solarLightingWithSpecular
+            //do! ImageProjection.Shaders.stableImageProjection
+            //do! ImageProjection.Shaders.localImageProjections
         }
 
     let trajectories = 
@@ -555,6 +568,13 @@ let main (argv : array<string>) =
         |> Sg.projTrafo' Trafo3d.Identity
 
 
+    let mutable x, y, z = 0.0, 0.0, 0.0
+    let r = 
+        if CooTransformation.LatLonAlt2Xyz("MARS", 18.855, 77.519, 0.0, &x, &y, &z) = 0 then
+            V3d(x, y, z) |> Some
+        else
+            None
+
     let sg = 
         Sg.ofList [
             realScene
@@ -583,8 +603,12 @@ let main (argv : array<string>) =
 
                 time.Value <- time.Value + dt * args.timeToSimluationTime
                 let frustum = instruments.["HERA_AFC-1"]
-                let view = (computeMarsFlyByCam referenceFrame time.Value).Value
-                customObservationCamera.Value <- Some (Camera.create view frustum)
+                let view = (computeMarsFlyByCam referenceFrame time.Value)
+                match view with
+                | Some view -> 
+                    customObservationCamera.Value <- Some (Camera.create view frustum)
+                | _ -> 
+                    Log.warn "could not"
                 animationStep()
                 lastFrame <- Some sw.Elapsed
             )
@@ -626,16 +650,35 @@ let main (argv : array<string>) =
     win.Keyboard.KeyDown(Keys.S).Values.Add(fun _ -> 
         snapshots |> Array.iteri (fun i t -> 
             
-            let view = (computeMarsFlyByCam referenceFrame time.Value).Value
+            let view = (computeMarsFlyByCam referenceFrame t).Value
             let frustum = instruments.["HERA_AFC-1"]
             transact (fun _ -> 
                 time.Value <- t
                 customObservationCamera.Value <- Some (Camera.create view frustum)
             )
+
+            let info = 
+                {
+                    instrumentReferenceFrame = "HERA_AFC-1"
+                    target = InstrumentImages.CameraFocus.FocusBody "MARS"
+                    cameraSource = InstrumentImages.CameraSource.InBody "HERA"
+                    instrumentName = "HERA_AFC-1"
+                    supportBody = "SUN"
+                    time = t.ToUniversalTime()
+                }
+
+            let json = InstrumentProjection.Serialization.serialize info
+
+            let targetDir = @"C:\pro3ddata\HERA\simulated" 
+            let filename = $"SIMULATED_{i}"
+            let imagePath = Path.Combine(targetDir, Path.ChangeExtension(filename, "jpg"))
+            let infoPath = Path.Combine(targetDir, Path.ChangeExtension(filename, "json"))
+
         
             let r = simulatedObservation.GetValue()
             let pi = r.Download()
-            pi.Save(Path.Combine(@"C:\pro3ddata\HERA\simulated", $"SIMULATED_{i}.tif"))
+            pi.Save(imagePath)
+            File.WriteAllText(infoPath, json)
         )
     )
 

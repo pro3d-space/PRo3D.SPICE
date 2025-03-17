@@ -21,3 +21,5 @@ Aardvark.PixImage.DevIL
 CommandLineParser.FSharp
 
 Aardvark.Reconstruction 
+
+FSharp.Json

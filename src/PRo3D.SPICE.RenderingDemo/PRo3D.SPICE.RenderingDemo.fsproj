@@ -11,6 +11,8 @@
     <OutputPath>..\..\bin\Release</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ProjectedImages.fs" />
+    <Compile Include="Shaders.fs" />
     <Compile Include="FrustumVisualization.fs" />
     <Compile Include="HeraFrusta.fs" />
     <Compile Include="ImageProjection.fs" />

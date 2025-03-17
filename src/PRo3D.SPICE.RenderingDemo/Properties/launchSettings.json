@@ -17,7 +17,7 @@
     },
     "HERA_START": {
       "commandName": "Project",
-      "commandLineArgs": "-k \"../../../spice_kernels/kernels/mk/hera_ops.tm\" --time 2024-10-11T16:33:01.263 --timefactor 0.0 --speed 100000000.0 --observer earth --referenceframe ECLIPJ2000"
+      "commandLineArgs": "-k \"../../../spice_kernels/kernels/mk/hera_ops.tm\" --time 2024-10-11T16:33:01.263 --timefactor 110.0 --speed 100000000.0 --observer earth --referenceframe ECLIPJ2000"
     },
     "ECLIPSE_EARTH25": {
       "commandName": "Project",
@@ -29,7 +29,7 @@
     },
     "MARS_FLYBY25": {
       "commandName": "Project",
-      "commandLineArgs": "-k \"../../../spice_kernels/kernels/mk/hera_ops.tm\" --time \"2025-03-12 11:50:00.000Z\" --timefactor 60.0 --speed 100000000.0 --observer mars --referenceframe ECLIPJ2000"
+      "commandLineArgs": "-k \"C:\\Users\\haral\\Desktop\\pro3d\\spice\\kernels\\mk\\hera_ops.tm\" --time \"2025-03-12 12:08:10.000Z\" --timefactor 10.0 --speed 100000000.0 --observer mars --referenceframe ECLIPJ2000"
     },
     "PHOBOS_IMAGING": {
       "commandName": "Project",
