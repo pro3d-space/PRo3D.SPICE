@@ -1,3 +1,6 @@
+### 1.0.5
+* added osx build
+
 ### 1.0.4
 * added getRotationTrafo
 
