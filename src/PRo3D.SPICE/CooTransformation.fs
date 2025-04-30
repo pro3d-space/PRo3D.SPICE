@@ -9,7 +9,7 @@ module CooTransformation =
 
 
     [<Literal>]
-    let cooTransformationLib = @"CooTransformation.dll"
+    let cooTransformationLib = @"CooTransformation"
 
     [<DllImport(cooTransformationLib, CallingConvention = CallingConvention.Cdecl)>]
     extern int Init(bool bConsoleLog, string pcLogFile, int nConsoleLogLevel, int nFileLogLevel)
