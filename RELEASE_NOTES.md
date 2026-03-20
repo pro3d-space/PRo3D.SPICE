@@ -1,3 +1,6 @@
+### 1.0.8
+* updated aardpack tool
+
 ### 1.0.7
 * added default spice kernels
 
