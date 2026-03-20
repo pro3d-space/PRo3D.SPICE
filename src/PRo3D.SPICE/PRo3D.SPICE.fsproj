@@ -14,7 +14,12 @@
   <ItemGroup>
     <None Include="paket.references" />
     <Compile Include="CooTransformation.fs" />
+    <Compile Include="DefaultSpiceKernels.fs" />
     <Compile Include="CooTransformation.FSharp.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resources\defaultSpiceKernel\pck00010.tpc" />
+    <EmbeddedResource Include="resources\defaultSpiceKernel\pck00010-base.tpc" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

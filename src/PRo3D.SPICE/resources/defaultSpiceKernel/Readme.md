@@ -1,0 +1,2 @@
+This folder contains a tweaked version of default spice kernels to have a battery-included pro3d.spice lib which can be used without extra management of spice kernels.
+the embedded kernel overrides spin to flip longitude.
