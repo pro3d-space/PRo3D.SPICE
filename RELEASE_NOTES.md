@@ -1,3 +1,6 @@
+### 1.0.7
+* added default spice kernels
+
 ### 1.0.6
 * fixed osx build
 
