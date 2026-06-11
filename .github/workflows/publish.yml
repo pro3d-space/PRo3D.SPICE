@@ -10,7 +10,10 @@ jobs:
   pack:
     name: Package
     runs-on: windows-latest
-    steps:  
+    permissions:
+      id-token: write   # required for nuget.org trusted publishing (OIDC)
+      contents: write   # aardpack uses GITHUB_TOKEN
+    steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install Dotnet
@@ -33,8 +36,12 @@ jobs:
         with:
           name: packages
           path: bin\pack
-      - name: NuGet
-        env:
-          NUGET_KEY: ${{ secrets.NUGET_KEY }}
-        shell: cmd
-        run: dotnet nuget push "bin\pack\*.nupkg" -k %NUGET_KEY% -s "https://api.nuget.org/v3/index.json" --skip-duplicate
+      # Exchange the GitHub OIDC token for a short-lived nuget.org API key.
+      # Requires a Trusted Publishing policy on nuget.org for this repo+workflow.
+      - name: NuGet login (OIDC -> temporary API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}   # nuget.org profile name (the OIDC identity); package owner is set on the policy
+      - name: NuGet push
+        run: dotnet nuget push "bin\pack\*.nupkg" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json" --skip-duplicate
