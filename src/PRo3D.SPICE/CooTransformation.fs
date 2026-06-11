@@ -43,12 +43,3 @@ module CooTransformation =
 
     [<DllImport(cooTransformationLib, CallingConvention = CallingConvention.Cdecl)>]
     extern int GetPositionTransformationMatrix(string pcFrom, string pcTo, string pcDatetime, double* pdRotMat)
-
-    [<DllImport(cooTransformationLib, CallingConvention = CallingConvention.Cdecl)>]
-    extern int Str2Et(string rsTimestamp, double& rdEt)
-
-
-//module SPICENative =
-
-//    [<DllImport(cooTransformationLib, CallingConvention = CallingConvention.Cdecl)>]
-//    extern void pxfrm2_c(string fromRefFrame, string toRefFrame, double etfrom, double etto, double* rotMat)

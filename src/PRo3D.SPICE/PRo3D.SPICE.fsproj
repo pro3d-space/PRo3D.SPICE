@@ -18,6 +18,7 @@
     <Compile Include="CooTransformation.FSharp.fs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="resources\defaultSpiceKernel\naif0012.tls" />
     <EmbeddedResource Include="resources\defaultSpiceKernel\pck00010.tpc" />
     <EmbeddedResource Include="resources\defaultSpiceKernel\pck00010-base.tpc" />
   </ItemGroup>
