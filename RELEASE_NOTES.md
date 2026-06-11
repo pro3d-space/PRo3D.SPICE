@@ -1,3 +1,7 @@
+### 1.0.9
+* added macOS arm64 (Apple Silicon) native binaries
+* added cspice native library re-exporting the full CSPICE C API for direct P/Invoke
+
 ### 1.0.8
 * updated aardpack tool
 

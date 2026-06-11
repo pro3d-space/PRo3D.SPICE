@@ -1,17 +1,27 @@
-name: Test 
+name: Test
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
+
 jobs:
-  mac_x64:
-    name: OSX (x64)
-    runs-on: macos-13
-    steps:  
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-15, macos-15-intel]
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      # No submodules: the hera spice kernels are no longer public. The basic
+      # SPICE tests run against the embedded default kernels; the kernel-heavy
+      # tests (GetRelState, GetPositionTransformationMatrix) skip themselves
+      # when those kernels are absent.
       - name: Checkout
-        uses: actions/checkout@v2
-        with:
-            submodules: true
+        uses: actions/checkout@v4
       - name: Install Dotnet
         uses: actions/setup-dotnet@v4
         with:
@@ -20,5 +30,5 @@ jobs:
         run: dotnet tool restore
       - name: Restore paket
         run: dotnet paket restore
-      - name: Build
-        run: dotnet run --project src/PRo3D.SPICE.Tests/PRo3D.SPICE.Tests.fsproj
+      - name: Test
+        run: dotnet run --project src/PRo3D.SPICE.Tests/PRo3D.SPICE.Tests.fsproj -c Release
