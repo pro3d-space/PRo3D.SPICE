@@ -28,7 +28,14 @@ module CSpiceDirect =
 
 let logDir = Path.Combine(".", "logs")
 let spiceRoot = Path.Combine(__SOURCE_DIRECTORY__, "..", "..")
-let heraKernelPath = Path.Combine(spiceRoot, "spice_kernels", "kernels", "mk", "hera_ops.tm")
+// Defaults to the private hera submodule; PRO3D_SPICE_KERNELS_DIR overrides the
+// root for local runs against an already-checked-out kernel tree with the same
+// kernels/mk/hera_ops.tm layout (e.g. the hera.git checkout, not this submodule).
+let spiceKernelsRoot =
+    match Environment.GetEnvironmentVariable("PRO3D_SPICE_KERNELS_DIR") with
+    | null | "" -> Path.Combine(spiceRoot, "spice_kernels")
+    | dir -> Path.GetFullPath(dir)
+let heraKernelPath = Path.Combine(spiceKernelsRoot, "kernels", "mk", "hera_ops.tm")
 
 // Tests that need ephemeris / mission kernels (provided locally by the private
 // hera submodule) are skipped when those kernels are absent -- e.g. in CI,
@@ -77,8 +84,68 @@ let tests () =
         test "CorrectVersion" {
             use _ = init()
             let v = CooTransformation.GetAPIVersion()
-            Expect.equal v 5u "returned wrong version"
+            Expect.equal v 7u "returned wrong version"
         }
+
+        test "GetPositionTransformationMatrix failure does not poison the next call" {
+            // GetPositionTransformationMatrix used to leave CSPICE's global error
+            // flag set on failure (pxform_c has no reset_c() cleanup), so the very
+            // next, unrelated, otherwise-valid SPICE call would fail too. Uses only
+            // the embedded default kernels (LSK + generic PCK, no ephemeris), so it
+            // runs in CI without the private Hera kernel submodule.
+            use _ = init()
+            DefaultSpiceKernels.loadDefaults()
+            let t = "2020-12-03 08:15:00.00"
+            let m : double[] = Array.zeroCreate 9
+            let pdMat = fixed &m[0]
+
+            // Didymos has no orientation model in the generic PCK: expected to fail.
+            let failing = CooTransformation.GetPositionTransformationMatrix("IAU_DIDYMOS", "J2000", t, pdMat)
+            Expect.notEqual failing 0 "IAU_DIDYMOS->J2000 should fail with only the generic PCK loaded"
+
+            // Mars does have orientation data: this unrelated, valid call must still succeed.
+            let m2 : double[] = Array.zeroCreate 9
+            let pdMat2 = fixed &m2[0]
+            let afterFailure = CooTransformation.GetPositionTransformationMatrix("IAU_MARS", "J2000", t, pdMat2)
+            Expect.equal afterFailure 0 "IAU_MARS->J2000 should still succeed right after an unrelated failure"
+        }
+
+        // The embedded default PCK ("pck00010.tpc") is itself a meta-kernel that
+        // additionally KERNELS_TO_LOAD's "pck00010-base.tpc", and loadDefaults()
+        // also furnshes that same base file separately by its own path -- so it
+        // ends up loaded twice, under two different path strings. That makes
+        // in-process unload assertions against the embedded defaults unreliable
+        // (unloading one path-identity leaves the other's assignments in the
+        // pool). Test against a real, single-instance kernel instead.
+        if hasExternalKernels then
+            test "UnloadSpiceKernel actually clears the kernel pool" {
+                use _ = init()
+                // CSPICE's file routines need the CWD set to the kernel's own
+                // directory for both load AND unload -- same convention
+                // AddSpiceKernel callers already follow throughout this codebase.
+                let previousDir = Environment.CurrentDirectory
+                Environment.CurrentDirectory <- Path.GetDirectoryName(heraKernelPath)
+
+                let addResult = CooTransformation.AddSpiceKernel(heraKernelPath)
+
+                let t = "2026-12-03 08:15:00.00"
+                let resolve () =
+                    let m : double[] = Array.zeroCreate 9
+                    let pdMat = fixed &m[0]
+                    CooTransformation.GetPositionTransformationMatrix("IAU_EARTH", "J2000", t, pdMat)
+
+                let beforeUnload = resolve ()
+                let unloadResult = CooTransformation.UnloadSpiceKernel(heraKernelPath)
+                let afterUnload = resolve ()
+                Environment.CurrentDirectory <- previousDir
+
+                Expect.equal addResult 0 "loading hera_ops.tm should succeed"
+                Expect.equal beforeUnload 0 "IAU_EARTH->J2000 should resolve with hera_ops.tm loaded"
+                Expect.equal unloadResult 0 "UnloadSpiceKernel should succeed"
+                Expect.notEqual afterUnload 0 "IAU_EARTH->J2000 should fail once hera_ops.tm (and everything it loaded) is unloaded"
+            }
+        else
+            printfn "WARNING: Skipping UnloadSpiceKernel test - HERA spice kernels not found at %s" heraKernelPath
 
         test "CSpiceDirectStr2Et" {
             // Exercises the default leapseconds kernel (naif0012.tls) through the

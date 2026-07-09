@@ -293,11 +293,9 @@ let main (argv : array<string>) =
         if true then
             let afc1Pos = CooTransformation.getRelState instrumentName supportBody observer time referenceFrame
             match afc1Pos with    
-            | Some targetState -> 
+            | Some targetState ->
                 let rot = targetState.rot
-                let r = CooTransformation.getRotationTrafo "HERA_AFC-1" referenceFrame time 
-                let tt = r.Value
-                let t = Trafo3d.FromBasis(rot.C0, rot.C1, rot.C2, targetState.pos) 
+                let t = Trafo3d.FromBasis(rot.C0, rot.C1, rot.C2, targetState.pos)
                 //CameraView.lookAt targetState.pos V3d.Zero V3d.OOI |> Some
                 CameraView.ofTrafo t.Inverse |> Some 
             | _ -> 

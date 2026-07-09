@@ -24,6 +24,9 @@ module CooTransformation =
     extern int AddSpiceKernel(string pSpiceKernelFileName)
 
     [<DllImport(cooTransformationLib, CallingConvention = CallingConvention.Cdecl)>]
+    extern int UnloadSpiceKernel(string pSpiceKernelFileName)
+
+    [<DllImport(cooTransformationLib, CallingConvention = CallingConvention.Cdecl)>]
     extern int Xyz2LatLonRad(double dX, double dY, double dZ, double* pdLat, double* pdLon, double* pdRad)
 
  
