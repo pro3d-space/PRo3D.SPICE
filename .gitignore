@@ -1,5 +1,8 @@
 bin/Release
 bin/Debug
+**/bin/Release
+**/bin/Debug
+**/Aardvark.log
 *.swp
 *.userprefs
 **/obj
@@ -7,6 +10,7 @@ bin/Debug
 !/packages/*.config
 /src/*.suo
 /bin/*.nupkg
+/bin/citest-feed
 /src/.vs
 /paket-files
 /.fake

@@ -32,3 +32,44 @@ jobs:
         run: dotnet paket restore
       - name: Test
         run: dotnet run --project src/PRo3D.SPICE.Tests/PRo3D.SPICE.Tests.fsproj -c Release
+
+  # Verifies the native DELIVERY the way a real nuget consumer (PRo3D) gets it:
+  # pack PRo3D.SPICE locally, then consume the .nupkg from a plain
+  # <PackageReference> app. That nupkg ships the natives ONLY as compressed
+  # resources embedded in PRo3D.SPICE.dll (no runtimes/ folder), so the app can
+  # only load CooTransformation if Aardvark.Base.Aardvark.UnpackNativeDependencies
+  # extracts the arch-correct binary for the current os/arch. The project-
+  # reference test job above cannot catch a broken unpack because the build
+  # drops the host native next to the DLL and masks it. This is what turns the
+  # osx-arm64 delivery bug red here instead of only downstream in PRo3D.
+  packaged-native-unpack:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-15, macos-15-intel]
+    name: pkg-native ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Restore tools
+        run: dotnet tool restore
+      - name: Restore paket
+        run: dotnet paket restore
+      # Build the library so its DLL carries the freshly embedded natives, then
+      # pack it into a local feed under the pinned CI-only version. That version
+      # matches the exact-version bracket the consumer app references, so the
+      # consume step can never accidentally pull the stable PRo3D.SPICE from
+      # nuget.org.
+      - name: Build PRo3D.SPICE
+        run: dotnet build -c Release src/PRo3D.SPICE/PRo3D.SPICE.fsproj
+      - name: Pack local nupkg
+        run: dotnet paket pack --template src/PRo3D.SPICE/paket.template --version 0.0.0-citest --build-config Release bin/citest-feed
+      # Restore + run the packaged consumer. Its own nuget.config adds
+      # bin/citest-feed as a source; a non-zero exit fails the job.
+      - name: Consume packaged nupkg and P/Invoke SPICE
+        run: dotnet run -c Release --project src/PRo3D.SPICE.PackagedConsumerTest/PRo3D.SPICE.PackagedConsumerTest.fsproj
