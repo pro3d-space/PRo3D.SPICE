@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    1:1 PRo3D-style native-delivery test: net9.0 + paket-resolved PRo3D.SPICE +
+    Aardvark.Base 5.3.19, exactly the framework/resolver/base version PRo3D's
+    own src/Tests uses. Reuses the same Program.fs as the classic-NuGet consumer
+    so the only variables vs that (passing) test are the framework and the
+    resolver. Its paket root is this directory (see paket.dependencies); build
+    it with SDK 9 (see global.json here).
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <IsPackable>false</IsPackable>
+    <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\PRo3D.SPICE.PackagedConsumerTest\Program.fs" />
+    <None Include="paket.references" />
+  </ItemGroup>
+  <Import Project=".paket\Paket.Restore.targets" />
+</Project>

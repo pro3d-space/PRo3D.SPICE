@@ -1,0 +1,25 @@
+STORAGE: NONE
+RESTRICTION: == net9.0
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    Aardvark.Base (5.3.19)
+      Aardvark.Base.Telemetry (5.3.19)
+      SingleFileExtractor.Core (>= 2.2.1 < 2.3)
+      System.Collections.Immutable (>= 8.0)
+      System.Reflection.Metadata (>= 8.0)
+      System.Text.Json (>= 8.0.5)
+    Aardvark.Base.Telemetry (5.3.19)
+    FSharp.Core (10.1.302)
+    SingleFileExtractor.Core (2.2.1)
+    System.Collections.Immutable (10.0.10)
+    System.IO.Pipelines (10.0.10)
+    System.Reflection.Metadata (10.0.10)
+      System.Collections.Immutable (>= 10.0.10)
+    System.Text.Encodings.Web (10.0.10)
+    System.Text.Json (10.0.10)
+      System.IO.Pipelines (>= 10.0.10)
+      System.Text.Encodings.Web (>= 10.0.10)
+  remote: ../../bin/citest-feed
+    PRo3D.SPICE (0.0.0-citest)
+      Aardvark.Base (>= 5.3 < 5.4)
+      FSharp.Core (>= 8.0.1)

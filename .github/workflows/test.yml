@@ -73,3 +73,49 @@ jobs:
       # bin/citest-feed as a source; a non-zero exit fails the job.
       - name: Consume packaged nupkg and P/Invoke SPICE
         run: dotnet run -c Release --project src/PRo3D.SPICE.PackagedConsumerTest/PRo3D.SPICE.PackagedConsumerTest.fsproj
+
+  # 1:1 with how PRo3D actually consumes the package: net9.0 + paket 9.0.2
+  # (framework: auto-detect) + Aardvark.Base 5.3.19. Same natives, same
+  # UnpackNativeDependencies call -- the ONLY differences from the passing
+  # classic-NuGet job above are the framework (net9.0 vs net8.0) and the
+  # resolver (paket vs NuGet). If PRo3D's osx-arm64 failure is caused by either,
+  # THIS is the job that reproduces it. The consumer is its own isolated paket
+  # root (src/PRo3D.SPICE.PaketConsumerTest) so it never touches the library's
+  # paket 8.0.3 resolution.
+  paket-native-unpack:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-15, macos-15-intel]
+    name: paket-native ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      # Install BOTH: 8.0.x builds/packs the library (root global.json, paket
+      # 8.0.3); 9.0.x builds/runs the consumer (its own global.json).
+      - name: Install Dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+      - name: Restore tools (library, paket 8.0.3)
+        run: dotnet tool restore
+      - name: Restore paket (library)
+        run: dotnet paket restore
+      - name: Build PRo3D.SPICE
+        run: dotnet build -c Release src/PRo3D.SPICE/PRo3D.SPICE.fsproj
+      - name: Pack local nupkg
+        run: dotnet paket pack --template src/PRo3D.SPICE/paket.template --version 0.0.0-citest --build-config Release bin/citest-feed
+      # Consumer steps run in its own dir so paket 9.0.2 + SDK 9 (its .config +
+      # global.json) are picked up, and paket treats it as the root.
+      - name: Restore consumer tools (paket 9.0.2)
+        working-directory: src/PRo3D.SPICE.PaketConsumerTest
+        run: dotnet tool restore
+      - name: Restore consumer via paket
+        working-directory: src/PRo3D.SPICE.PaketConsumerTest
+        run: dotnet paket restore
+      - name: Consume via paket on net9.0 and P/Invoke SPICE
+        working-directory: src/PRo3D.SPICE.PaketConsumerTest
+        run: dotnet run -c Release
