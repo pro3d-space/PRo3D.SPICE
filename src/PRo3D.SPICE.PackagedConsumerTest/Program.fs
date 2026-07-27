@@ -36,11 +36,18 @@ let main _ =
     let spiceAssembly = typeof<CooTransformation.RelState>.Assembly
     let asmDir = Path.GetDirectoryName(spiceAssembly.Location)
 
+    let aardvarkBaseAsm = typeof<Aardvark.Base.Aardvark>.Assembly
+
     printfn "== packaged-consumer native-unpack test =="
-    printfn "OS           : %s" (RuntimeInformation.OSDescription)
-    printfn "Process arch : %A" RuntimeInformation.ProcessArchitecture
-    printfn "RID          : %s" RuntimeInformation.RuntimeIdentifier
-    printfn "PRo3D.SPICE  : %s" spiceAssembly.Location
+    printfn "OS            : %s" (RuntimeInformation.OSDescription)
+    printfn "Process arch  : %A" RuntimeInformation.ProcessArchitecture
+    printfn "RID           : %s" RuntimeInformation.RuntimeIdentifier
+    printfn "PRo3D.SPICE   : %s" spiceAssembly.Location
+    // Which Aardvark.Base actually runs the unpack is the whole ballgame: print
+    // it so the CI log is unambiguous about the version under test.
+    printfn "Aardvark.Base : %s (%s)"
+        (aardvarkBaseAsm.GetName().Version.ToString())
+        (Diagnostics.FileVersionInfo.GetVersionInfo(aardvarkBaseAsm.Location).ProductVersion)
 
     // Force the embed/unpack path: remove any native already sitting next to
     // the managed DLL, so a passing Init can ONLY mean UnpackNativeDependencies
