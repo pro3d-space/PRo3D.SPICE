@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Native-delivery verification for a REAL nuget consumer.
+
+    Deliberately NOT a paket project and deliberately NOT in PRo3D.SPICE.sln:
+    it references PRo3D.SPICE as a plain <PackageReference> resolved from a
+    locally-built .nupkg (see nuget.config). Because that nupkg ships the native
+    libs ONLY as compressed resources embedded in PRo3D.SPICE.dll (no runtimes/
+    folder), the only way CooTransformation can load at runtime is if
+    Aardvark.Base.Aardvark.UnpackNativeDependencies extracts the arch-correct
+    binary for the current os/arch. That is exactly the path the downstream
+    PRo3D consumer hits, and the path the project-reference test project can
+    never exercise, because a project reference lets the host native sit next to
+    the managed DLL and masks a broken unpack.
+
+    The pinned version below MUST match the version paket packs with in CI.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <DisableImplicitFSharpCoreReference>false</DisableImplicitFSharpCoreReference>
+    <!-- Keep this project out of any accidental paket restore. -->
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Exact-version bracket so this can ONLY resolve the freshly packed local
+         nupkg, never the stable PRo3D.SPICE already on nuget.org. -->
+    <PackageReference Include="PRo3D.SPICE" Version="[0.0.0-citest]" />
+    <!-- Pin the SAME Aardvark.Base PRo3D pins (paket.lock: 5.3.19) so this test
+         runs UnpackNativeDependencies from the exact assembly the failing
+         downstream consumer uses. Without this, NuGet resolves the floor of the
+         nupkg's [5.3.0,5.4.0) range (5.3.7), which is NOT what PRo3D ships. -->
+    <PackageReference Include="Aardvark.Base" Version="[5.3.19]" />
+  </ItemGroup>
+
+</Project>

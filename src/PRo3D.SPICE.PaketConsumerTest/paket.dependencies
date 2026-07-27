@@ -1,0 +1,23 @@
+// Isolated paket root for the 1:1 PRo3D-style native-delivery test.
+//
+// This is deliberately a SEPARATE paket.dependencies (its own paket.lock lives
+// next to it), so it does not touch the library's root paket resolution. It
+// mirrors how PRo3D's own net9.0 test project (src/Tests, resolved via paket)
+// pulls the natives:
+//   - net9.0 (PRo3D targets net9.0, not net8.0)
+//   - PRo3D.SPICE consumed as a paket nuget (from the locally packed feed)
+//   - Aardvark.Base pinned to 5.3.19 (PRo3D's paket.lock version)
+// so UnpackNativeDependencies runs under the exact framework + resolver + base
+// version PRo3D uses. Run paket from THIS directory so it is treated as root.
+// framework auto-detect + paket 9.0.2 (see .config/dotnet-tools.json here) to
+// match PRo3D, whose net9.0 tests resolve via paket 9.0.2. Paket 8.0.3 (the
+// library's pinned tool) cannot even parse net9.0, which is itself a signal.
+framework: auto-detect
+source https://api.nuget.org/v3/index.json
+source ../../bin/citest-feed
+
+storage: none
+
+nuget PRo3D.SPICE 0.0.0-citest
+nuget Aardvark.Base 5.3.19
+nuget FSharp.Core
