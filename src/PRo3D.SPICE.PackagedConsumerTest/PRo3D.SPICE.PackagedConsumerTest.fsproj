@@ -33,6 +33,11 @@
     <!-- Exact-version bracket so this can ONLY resolve the freshly packed local
          nupkg, never the stable PRo3D.SPICE already on nuget.org. -->
     <PackageReference Include="PRo3D.SPICE" Version="[0.0.0-citest]" />
+    <!-- Pin the SAME Aardvark.Base PRo3D pins (paket.lock: 5.3.19) so this test
+         runs UnpackNativeDependencies from the exact assembly the failing
+         downstream consumer uses. Without this, NuGet resolves the floor of the
+         nupkg's [5.3.0,5.4.0) range (5.3.7), which is NOT what PRo3D ships. -->
+    <PackageReference Include="Aardvark.Base" Version="[5.3.19]" />
   </ItemGroup>
 
 </Project>
